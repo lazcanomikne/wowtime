@@ -35,7 +35,8 @@ public class ServicioSaldos(AppDb db, IReloj reloj)
     public async Task Comprometer(Solicitud s, DateOnly hoy, int? usuarioId)
     {
         var saldos = await Vigentes(db.Saldos.Where(x => x.ColaboradorId == s.ColaboradorId), hoy).OrderBy(x => x.FechaLimite).ToListAsync();
-        var falta = s.DiasHabiles;
+        var falta = s.DiasADescontar;
+        if (falta <= 0) return;
         if (saldos.Sum(x => x.Disponibles) < falta)
             throw ApiException.Validacion("No tienes saldo suficiente para esta solicitud.");
         foreach (var saldo in saldos)

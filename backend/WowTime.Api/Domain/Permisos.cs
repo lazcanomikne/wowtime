@@ -37,6 +37,9 @@ public static class Permisos
     public const string SistemaConfigurar = "sistema.configurar";
     public const string TodasSucursales = "sucursales.todas";
 
+    // Integraciones (solo para llaves de API)
+    public const string IntegracionInovaOS = "integracion.inovaos";
+
     public static readonly (string Clave, string Nombre, string Grupo)[] Catalogo =
     [
         (AsistenciaRegistrar, "Registrar su asistencia", "Autoservicio"),
@@ -65,7 +68,11 @@ public static class Permisos
         (LlavesApiGestionar, "Llaves de API", "Administración"),
         (SistemaConfigurar, "Parámetros del sistema", "Administración"),
         (TodasSucursales, "Acceso a todas las sucursales", "Administración"),
+        (IntegracionInovaOS, "Integración con InovaOS: actuar como el usuario indicado en X-Actuar-Como", "Integraciones"),
     ];
+
+    /// <summary>Permisos que solo se asignan a llaves de API, nunca a un rol.</summary>
+    public static readonly string[] SoloLlaves = [IntegracionInovaOS];
 
     public static readonly Dictionary<string, string[]> PorRol = new()
     {
@@ -79,6 +86,6 @@ public static class Permisos
             EquipoVer, AprobacionesDecidir, IncidenciasResolver, DelegacionesPropias, ReportesEquipo,
             DashboardVer, ColaboradoresVer, ColaboradoresEditar, NotasGestionar, AsistenciaGestionar, VacacionesGestionar,
             VisitantesVer, VisitantesAcceso, ExpedientesGestionar, ReportesSucursal, OrganizacionGestionar, AprobacionesConfigurar, CatalogosGestionar],
-        [Roles.Administrador] = Catalogo.Select(c => c.Clave).ToArray(),
+        [Roles.Administrador] = Catalogo.Select(c => c.Clave).Where(c => !SoloLlaves.Contains(c)).ToArray(),
     };
 }

@@ -63,6 +63,7 @@ public class AppDb(DbContextOptions<AppDb> options, IUsuarioActualAccessor? actu
             e.HasIndex(x => x.Numero).IsUnique();
             e.HasIndex(x => x.SucursalId);
             e.HasIndex(x => x.SupervisorId);
+            e.HasIndex(x => x.OrigenId).IsUnique();
             e.Ignore(x => x.NombreCompleto);
             e.HasOne(x => x.Supervisor).WithMany().HasForeignKey(x => x.SupervisorId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.Esquema).WithOne().HasForeignKey<EsquemaTrabajo>(x => x.ColaboradorId);
@@ -81,16 +82,21 @@ public class AppDb(DbContextOptions<AppDb> options, IUsuarioActualAccessor? actu
         m.Entity<EventoBitacora>().HasIndex(x => new { x.ColaboradorId, x.Fecha });
         m.Entity<RegistroAsistencia>().HasIndex(x => new { x.SucursalId, x.FechaLocal });
         m.Entity<RegistroAsistencia>().HasIndex(x => new { x.ColaboradorId, x.FechaLocal });
+        m.Entity<RegistroAsistencia>().HasIndex(x => x.OrigenId).IsUnique();
+        m.Entity<TipoPermiso>().HasIndex(x => x.Clave).IsUnique();
         m.Entity<IncidenciaAsistencia>().HasIndex(x => new { x.ColaboradorId, x.Fecha, x.Tipo });
         m.Entity<IncidenciaAsistencia>().HasOne(x => x.Colaborador).WithMany().HasForeignKey(x => x.ColaboradorId);
         m.Entity<PoliticaVacaciones>().HasMany(x => x.Tabla).WithOne().HasForeignKey(x => x.PoliticaVacacionesId);
-        m.Entity<SaldoVacaciones>(e => { e.Ignore(x => x.Disponibles); e.HasIndex(x => new { x.ColaboradorId, x.Periodo }).IsUnique(); });
+        m.Entity<SaldoVacaciones>(e => { e.Ignore(x => x.Disponibles); e.HasIndex(x => new { x.ColaboradorId, x.Periodo }).IsUnique(); e.HasIndex(x => x.OrigenId).IsUnique(); });
         m.Entity<ReglaAprobacion>().HasMany(x => x.Pasos).WithOne().HasForeignKey(x => x.ReglaAprobacionId);
         m.Entity<ReglaAprobacion>().HasIndex(x => x.Clave).IsUnique();
         m.Entity<Solicitud>(e =>
         {
             e.HasIndex(x => x.Folio).IsUnique();
             e.HasIndex(x => new { x.ColaboradorId, x.Estado });
+            e.HasIndex(x => x.OrigenId).IsUnique();
+            e.Ignore(x => x.DiasADescontar);
+            e.Ignore(x => x.OcupaCalendario);
             e.HasOne(x => x.Colaborador).WithMany().HasForeignKey(x => x.ColaboradorId);
             e.HasOne(x => x.CoberturaColaborador).WithMany().HasForeignKey(x => x.CoberturaColaboradorId).OnDelete(DeleteBehavior.SetNull);
             e.HasMany(x => x.Pasos).WithOne(x => x.Solicitud).HasForeignKey(x => x.SolicitudId);

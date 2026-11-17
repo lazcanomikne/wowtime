@@ -85,7 +85,7 @@ public class SolicitudesController : ApiBase
         var pag = await q.Pag(f, s => s, "CreadoEn");
         var hoy = Hoy;
         var saldos = new Dictionary<int, decimal>();
-        foreach (var cid in pag.Items.Where(s => s.Tipo == TipoSolicitud.Vacaciones).Select(s => s.ColaboradorId).Distinct())
+        foreach (var cid in pag.Items.Where(s => s.DiasADescontar > 0).Select(s => s.ColaboradorId).Distinct())
             saldos[cid] = (await Svc<ServicioSaldos>().Resumen(cid, hoy)).Disponibles;
         var decisor = Yo.UsuarioId is int ? Decisor() : null;
         var motor = Svc<MotorAprobaciones>();
@@ -124,7 +124,7 @@ public class SolicitudesController : ApiBase
         var esAprobador = s.Pasos.Any(p => p.TitularColaboradorId == Yo.ColaboradorId || p.DecididoPorUsuarioId == Yo.UsuarioId) || puede?.Puede == true;
         if (!esMia && !esAprobador) await ColaboradorVisible(s.ColaboradorId);
         var bit = await Db.Bitacora.Where(b => b.Entidad == "Solicitud" && b.EntidadId == id).OrderBy(b => b.Fecha).ToListAsync();
-        var saldo = s.Tipo == TipoSolicitud.Vacaciones ? (await Svc<ServicioSaldos>().Resumen(s.ColaboradorId, hoy)).Disponibles : (decimal?)null;
+        var saldo = s.DiasADescontar > 0 ? (await Svc<ServicioSaldos>().Resumen(s.ColaboradorId, hoy)).Disponibles : (decimal?)null;
         var motor = Svc<MotorAprobaciones>();
         var pasos = new List<object>();
         foreach (var p in s.Pasos.OrderBy(p => p.Orden))
@@ -185,7 +185,7 @@ public class SolicitudesController : ApiBase
         var hoy = Hoy;
         var res = new List<object>();
         foreach (var s in lista)
-            res.Add(Resumen(s, s.Tipo == TipoSolicitud.Vacaciones ? (await Svc<ServicioSaldos>().Resumen(s.ColaboradorId, hoy)).Disponibles : null, true));
+            res.Add(Resumen(s, s.DiasADescontar > 0 ? (await Svc<ServicioSaldos>().Resumen(s.ColaboradorId, hoy)).Disponibles : null, true));
         return new { Total = res.Count, Items = res };
     }
 

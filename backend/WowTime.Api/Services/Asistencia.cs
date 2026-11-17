@@ -37,7 +37,9 @@ public class ServicioAsistencia(AppDb db, IReloj reloj, Parametros parametros, B
         var tolerancia = turno?.ToleranciaMinutos ?? await parametros.Entero(Parametros.ToleranciaMinutos, 10);
 
         string? ausencia = null;
-        var sol = await db.Solicitudes.Where(s => s.ColaboradorId == c.Id && s.Estado == EstadoSolicitud.Aprobada && s.Tipo != TipoSolicitud.IncidenciaAsistencia
+        // Cubren la jornada las vacaciones y los permisos de día; el canje no ocupa calendario y los permisos por horas no cubren el día
+        var sol = await db.Solicitudes.Where(s => s.ColaboradorId == c.Id && s.Estado == EstadoSolicitud.Aprobada
+            && (s.Tipo == TipoSolicitud.Vacaciones || (s.Tipo == TipoSolicitud.Permiso && (s.TipoPermiso == null || !s.TipoPermiso.Parcial)))
             && s.FechaInicio <= fecha && s.FechaFin >= fecha).Select(s => (TipoSolicitud?)s.Tipo).FirstOrDefaultAsync();
         if (sol is TipoSolicitud ts) ausencia = Mapas.NombreTipoSolicitud(ts);
         if (await db.Incapacidades.AnyAsync(i => i.ColaboradorId == c.Id && !i.Cancelada && i.FechaInicio <= fecha && i.FechaFin >= fecha)) ausencia = "Incapacidad";
@@ -174,6 +176,7 @@ public class ServicioAsistencia(AppDb db, IReloj reloj, Parametros parametros, B
     public async Task<(int faltas, int salidas)> CerrarDia(DateOnly fecha)
     {
         int faltas = 0, salidas = 0;
+        var exigirSalida = await parametros.Booleano(Parametros.ExigirSalida, true);
         var colaboradores = await db.Colaboradores.Include(c => c.Turno).Include(c => c.Esquema).Include(c => c.Sucursal)
             .Where(c => c.Estatus == EstatusColaborador.Activo && c.FechaIngreso <= fecha).ToListAsync();
         var regs = await db.Registros.Where(r => r.FechaLocal == fecha).Select(r => new { r.ColaboradorId, r.Tipo, r.Id }).ToListAsync();
@@ -186,7 +189,7 @@ public class ServicioAsistencia(AppDb db, IReloj reloj, Parametros parametros, B
             {
                 if (await CrearIncidencia(c, fecha, TipoIncidencia.Falta, null, "Sin registro de entrada en la jornada.") is not null) faltas++;
             }
-            else if (!mios.Any(r => r.Tipo == TipoRegistro.Salida))
+            else if (exigirSalida && !mios.Any(r => r.Tipo == TipoRegistro.Salida))
             {
                 var e = mios.First(r => r.Tipo == TipoRegistro.Entrada);
                 if (await CrearIncidencia(c, fecha, TipoIncidencia.SalidaOmitida, e.Id, "Hay entrada pero no se registró la salida.") is not null) salidas++;

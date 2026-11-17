@@ -76,7 +76,7 @@ public class AprobacionesController : ApiBase
         return await q.Pag(f, d => new
         {
             d.Id, De = Per(d.De), Hacia = Per(d.Hacia), d.FechaInicio, d.FechaFin, Periodo = ServicioSolicitudes.TextoPeriodo(d.FechaInicio, d.FechaFin), d.Tipos,
-            TiposTexto = string.Join(" y ", d.Tipos.Select(t => t switch { TipoSolicitud.Vacaciones => "vacaciones", TipoSolicitud.Permiso => "permisos", _ => "incidencias" })) is var tx && tx.Length > 0 ? char.ToUpper(tx[0]) + tx[1..] : "",
+            TiposTexto = string.Join(" y ", d.Tipos.Select(t => t switch { TipoSolicitud.Vacaciones => "vacaciones", TipoSolicitud.Permiso => "permisos", TipoSolicitud.CanjeDias => "canjes de días", _ => "incidencias" })) is var tx && tx.Length > 0 ? char.ToUpper(tx[0]) + tx[1..] : "",
             Estado = d.TerminadaEn != null ? "Terminada" : d.FechaInicio > hoy ? "Programada" : d.FechaFin < hoy ? "Concluida" : "Vigente", d.TerminadaEn
         });
     }

@@ -10,7 +10,7 @@ public enum OrigenRegistro { App, Terminal, Kiosco, Rh }
 public enum EstadoRegistro { EnHorario, Retardo, SalidaRegistrada, SalidaAnticipada }
 public enum TipoIncidencia { Retardo, Falta, SalidaOmitida, FueraDeArea }
 public enum EstadoIncidencia { PorRevisar, EnRevision, Justificada, Confirmada }
-public enum TipoSolicitud { Vacaciones, Permiso, IncidenciaAsistencia }
+public enum TipoSolicitud { Vacaciones, Permiso, IncidenciaAsistencia, CanjeDias }
 public enum EstadoSolicitud { Pendiente, Aprobada, Rechazada, Cancelada }
 public enum TipoAprobador { SupervisorDirecto, Gerente, RecursosHumanos }
 public enum EstadoPaso { EnEspera, Pendiente, Aprobado, Rechazado, Omitido }

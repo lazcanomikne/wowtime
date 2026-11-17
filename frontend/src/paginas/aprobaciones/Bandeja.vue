@@ -32,10 +32,10 @@ const conEncabezadoMovil = computed(() => esMovil.value && !s.esGestion)
 const yo = computed(() => s.me?.colaborador?.id ?? null)
 
 const TIPOS = [
-  { v: '', t: 'Todas' }, { v: 'Vacaciones', t: 'Vacaciones' }, { v: 'Permiso', t: 'Permisos' }, { v: 'IncidenciaAsistencia', t: 'Incidencias' }
+  { v: '', t: 'Todas' }, { v: 'Vacaciones', t: 'Vacaciones' }, { v: 'Permiso', t: 'Permisos' }, { v: 'CanjeDias', t: 'Canjes de días' }, { v: 'IncidenciaAsistencia', t: 'Incidencias' }
 ]
 const TIPOS_DELEGACION = [
-  { v: 'Vacaciones', t: 'Vacaciones' }, { v: 'Permiso', t: 'Permisos' }, { v: 'IncidenciaAsistencia', t: 'Incidencias de asistencia' }
+  { v: 'Vacaciones', t: 'Vacaciones' }, { v: 'Permiso', t: 'Permisos' }, { v: 'CanjeDias', t: 'Canjes de días' }, { v: 'IncidenciaAsistencia', t: 'Incidencias de asistencia' }
 ]
 const tipo = ref('')
 const resaltada = computed(() => Number(route.query.solicitud) || null)
@@ -80,12 +80,12 @@ async function rechazar(f: Fila) {
 // ───── Delegaciones ─────
 const modal = ref(false)
 const intento = ref(false)
-const nueva = reactive({ haciaColaboradorId: null as number | null, fechaInicio: iso(new Date()), fechaFin: '', tipos: ['Vacaciones', 'Permiso', 'IncidenciaAsistencia'] as string[] })
+const nueva = reactive({ haciaColaboradorId: null as number | null, fechaInicio: iso(new Date()), fechaFin: '', tipos: ['Vacaciones', 'Permiso', 'CanjeDias', 'IncidenciaAsistencia'] as string[] })
 const rutaDelegados = computed(() => (s.tiene('colaboradores.ver') ? '/colaboradores' : '/aprobaciones/delegados'))
 const faltantes = computed(() => !nueva.haciaColaboradorId || !nueva.fechaInicio || !nueva.fechaFin || !nueva.tipos.length || nueva.fechaFin < nueva.fechaInicio)
 
 function abrirModal() {
-  Object.assign(nueva, { haciaColaboradorId: null, fechaInicio: iso(new Date()), fechaFin: '', tipos: ['Vacaciones', 'Permiso', 'IncidenciaAsistencia'] })
+  Object.assign(nueva, { haciaColaboradorId: null, fechaInicio: iso(new Date()), fechaFin: '', tipos: ['Vacaciones', 'Permiso', 'CanjeDias', 'IncidenciaAsistencia'] })
   intento.value = false
   modal.value = true
 }

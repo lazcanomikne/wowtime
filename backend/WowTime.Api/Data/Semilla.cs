@@ -58,6 +58,14 @@ public class Semilla(AppDb db, IReloj reloj, Almacen almacen, ServicioSaldos sal
                 new TipoPermiso { Nombre = "Permiso por defunción", ConGoce = true, MaximoDias = 5 },
                 new TipoPermiso { Nombre = "Permiso por paternidad", ConGoce = true, MaximoDias = 5 },
                 new TipoPermiso { Nombre = "Cita médica", ConGoce = true, MaximoDias = 1 });
+        // Tipos de permiso con clave fija para integraciones (reglas de InovaOS: valen siempre lo mismo y descuentan saldo)
+        var claves = await db.TiposPermiso.Where(t => t.Clave != null).Select(t => t.Clave!).ToListAsync();
+        foreach (var t in TiposPermisoConClave.Where(t => !claves.Contains(t.Clave!))) db.TiposPermiso.Add(t);
+        await db.SaveChangesAsync();
+        // El canje de días sigue la ruta de vacaciones mientras ninguna regla lo incluya
+        if (!(await db.Reglas.ToListAsync()).Any(r => r.Tipos.Contains(TipoSolicitud.CanjeDias)))
+            foreach (var r in await db.Reglas.Where(r => r.Clave == "vacaciones" || r.Clave == "solicitud_supervisor").ToListAsync())
+                r.Tipos = [.. r.Tipos, TipoSolicitud.CanjeDias];
         if (!await db.TiposDocumento.AnyAsync())
             db.TiposDocumento.AddRange(TiposDocumentoBase().Select(t => new TipoDocumento { Nombre = t.n, ConVigencia = t.v, Obligatorio = true, Descripcion = t.d }));
         if (!await db.Politicas.AnyAsync())
@@ -93,6 +101,13 @@ public class Semilla(AppDb db, IReloj reloj, Almacen almacen, ServicioSaldos sal
             log.LogWarning("Se creó el usuario admin@wowtime.mx con la contraseña inicial definida en ADMIN_PASSWORD_INICIAL (o una aleatoria: {Pwd}).", pwd);
         }
     }
+
+    public static TipoPermiso[] TiposPermisoConClave =>
+    [
+        new() { Clave = "PERMIT_3H", Nombre = "Permiso de 3 horas", ConGoce = true, MaximoDias = 1, DiasDescuento = 0.3m, Parcial = true },
+        new() { Clave = "PERMIT_5H", Nombre = "Permiso de 5 horas", ConGoce = true, MaximoDias = 1, DiasDescuento = 0.5m, Parcial = true },
+        new() { Clave = "PERMIT_DAY", Nombre = "Permiso de día completo", ConGoce = true, MaximoDias = 1, DiasDescuento = 1m },
+    ];
 
     public static (string n, bool v, string d)[] TiposDocumentoBase() =>
     [

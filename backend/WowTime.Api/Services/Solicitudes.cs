@@ -16,6 +16,8 @@ public class DatosSolicitud
     public int? CoberturaColaboradorId { get; set; }
     public string? CoberturaNota { get; set; }
     public string? Comentario { get; set; }
+    /// <summary>Solo para el canje de días: cuántos días se pagan en lugar de tomarse.</summary>
+    public decimal? Dias { get; set; }
 }
 
 public record Validacion(string Codigo, string Mensaje, string Nivel);
@@ -23,7 +25,7 @@ public record FestivoRango(DateOnly Fecha, string Nombre);
 
 public record Simulacion(
     PersonaMini Colaborador, TipoSolicitud Tipo, DateOnly FechaInicio, DateOnly FechaFin, string PeriodoTexto,
-    int DiasNaturales, int DiasHabiles, decimal? SaldoDisponible, decimal? SaldoPosterior, bool SaldoSuficiente,
+    int DiasNaturales, decimal DiasHabiles, decimal? SaldoDisponible, decimal? SaldoPosterior, bool SaldoSuficiente,
     List<FestivoRango> Festivos, int[] DiasDescanso, List<Validacion> Validaciones, bool Valida,
     string? Regla, List<PasoRuta> Ruta, string RutaTexto);
 
@@ -64,7 +66,7 @@ public class ServicioSolicitudes(AppDb db, MotorAprobaciones motor, ServicioSald
         var res = new List<string>();
         var sols = await db.Solicitudes.Where(s => s.ColaboradorId == colaboradorId && s.Id != excluirSolicitud
                 && (s.Estado == EstadoSolicitud.Pendiente || s.Estado == EstadoSolicitud.Aprobada)
-                && s.Tipo != TipoSolicitud.IncidenciaAsistencia && s.FechaInicio <= fin && s.FechaFin >= ini)
+                && (s.Tipo == TipoSolicitud.Vacaciones || s.Tipo == TipoSolicitud.Permiso) && s.FechaInicio <= fin && s.FechaFin >= ini)
             .Select(s => new { s.Folio, s.Tipo, s.Estado, s.FechaInicio, s.FechaFin }).ToListAsync();
         res.AddRange(sols.Select(s => $"Se traslapa con la solicitud {s.Folio} de {Mapas.NombreTipoSolicitud(s.Tipo).ToLower()} ({(s.Estado == EstadoSolicitud.Aprobada ? "aprobada" : "pendiente")}, {TextoPeriodo(s.FechaInicio, s.FechaFin)})."));
         var inc = await db.Incapacidades.Where(i => i.ColaboradorId == colaboradorId && !i.Cancelada && i.FechaInicio <= fin && i.FechaFin >= ini).ToListAsync();
@@ -80,6 +82,8 @@ public class ServicioSolicitudes(AppDb db, MotorAprobaciones motor, ServicioSald
         var hoy = Zona.Hoy(reloj, c.Sucursal?.ZonaHoraria);
         var val = new List<Validacion>();
         void Error(string cod, string msg) => val.Add(new(cod, msg, "error"));
+        var canje = d.Tipo == TipoSolicitud.CanjeDias;
+        if (canje) { d.FechaInicio = hoy; d.FechaFin = hoy; }
 
         if (c.Estatus != EstatusColaborador.Activo) Error("colaborador_inactivo", "El colaborador no está activo.");
         if (d.FechaFin < d.FechaInicio) Error("fechas", "La fecha de término no puede ser anterior a la fecha de inicio.");
@@ -88,18 +92,35 @@ public class ServicioSolicitudes(AppDb db, MotorAprobaciones motor, ServicioSald
 
         var fin = d.FechaFin < d.FechaInicio ? d.FechaInicio : d.FechaFin;
         var (descanso, festivos) = await Calendario(c, d.FechaInicio, fin);
-        var habiles = Reglas.DiasHabiles(d.FechaInicio, fin, descanso, festivos.Select(f => f.Fecha));
-        if (habiles <= 0 && d.FechaFin >= d.FechaInicio) Error("sin_dias_habiles", "El periodo seleccionado no tiene días hábiles.");
+        var habilesCalendario = Reglas.DiasHabiles(d.FechaInicio, fin, descanso, festivos.Select(f => f.Fecha));
+        decimal habiles = habilesCalendario;
+        TipoPermiso? tp = null;
+        if (d.Tipo == TipoSolicitud.Permiso && d.TipoPermisoId is int tpid) tp = await db.TiposPermiso.FindAsync(tpid);
+        if (canje)
+        {
+            habiles = d.Dias ?? 0;
+            if (habiles <= 0) Error("dias", "Indica cuántos días quieres canjear.");
+        }
+        else if (habilesCalendario <= 0 && d.FechaFin >= d.FechaInicio) Error("sin_dias_habiles", "El periodo seleccionado no tiene días hábiles.");
+        if (tp?.DiasDescuento is decimal fijo)
+        {
+            if (d.FechaFin != d.FechaInicio) Error("permiso_un_dia", $"El \"{tp.Nombre}\" es de un solo día: la fecha final debe ser igual a la inicial.");
+            habiles = fijo;
+        }
+        var descuento = DescuentoDe(d.Tipo, habiles, tp);
 
         decimal? disponible = null, posterior = null;
         var suficiente = true;
-        if (d.Tipo == TipoSolicitud.Vacaciones)
+        if (descuento > 0)
         {
             var r = await saldos.Resumen(c.Id, hoy);
             disponible = r.Disponibles;
-            posterior = r.Disponibles - habiles;
+            posterior = r.Disponibles - descuento;
             suficiente = posterior >= 0;
-            if (!suficiente) Error("saldo_insuficiente", $"No tienes saldo suficiente: pides {habiles} días hábiles y tienes {r.Disponibles:0.#} disponibles.");
+            if (!suficiente) Error("saldo_insuficiente", $"No tienes saldo suficiente: pides {descuento:0.##} días y tienes {r.Disponibles:0.##} disponibles.");
+        }
+        if (d.Tipo == TipoSolicitud.Vacaciones)
+        {
             var pol = await Politica(c);
             if (pol is not null && pol.AnticipacionMinimaDias > 0 && d.FechaInicio < hoy.AddDays(pol.AnticipacionMinimaDias) && !capturaRh)
                 Error("anticipacion", $"Las vacaciones se solicitan con al menos {pol.AnticipacionMinimaDias} días de anticipación.");
@@ -109,12 +130,11 @@ public class ServicioSolicitudes(AppDb db, MotorAprobaciones motor, ServicioSald
             if (d.TipoPermisoId is null) Error("tipo_permiso", "Selecciona el tipo de permiso.");
             else
             {
-                var tp = await db.TiposPermiso.FindAsync(d.TipoPermisoId);
                 if (tp is null || !tp.Activo) Error("tipo_permiso", "El tipo de permiso no existe o está inactivo.");
                 else if (tp.MaximoDias is int max && habiles > max) Error("permiso_maximo", $"El permiso \"{tp.Nombre}\" admite como máximo {max} días hábiles.");
             }
         }
-        if (d.Tipo != TipoSolicitud.IncidenciaAsistencia)
+        if (d.Tipo is TipoSolicitud.Vacaciones or TipoSolicitud.Permiso)
             foreach (var t in await Traslapes(c.Id, d.FechaInicio, fin)) Error("traslape", t);
 
         if (d.CoberturaColaboradorId is int cob)
@@ -130,7 +150,7 @@ public class ServicioSolicitudes(AppDb db, MotorAprobaciones motor, ServicioSald
         var ruta = await motor.Resolver(c, d.Tipo, hoy);
         if (ruta.Error is not null) Error(ruta.CodigoError!, ruta.Error);
 
-        if (val.All(v => v.Nivel != "error") && d.Tipo == TipoSolicitud.Vacaciones)
+        if (val.All(v => v.Nivel != "error") && descuento > 0)
             val.Insert(0, new("saldo_ok", "Tienes saldo suficiente", "ok"));
 
         var rutaTexto = string.Join(" → ", ruta.Pasos.Select(p => p.TipoAprobador == TipoAprobador.RecursosHumanos ? "RH" : p.Etiqueta));
@@ -139,12 +159,20 @@ public class ServicioSolicitudes(AppDb db, MotorAprobaciones motor, ServicioSald
             val, val.All(v => v.Nivel != "error"), ruta.Regla?.Nombre, ruta.Pasos, rutaTexto);
     }
 
+    /// <summary>Días que resta del saldo: vacaciones y canje, sus días; permisos, solo los de valor fijo.</summary>
+    public static decimal DescuentoDe(TipoSolicitud tipo, decimal dias, TipoPermiso? tp) => tipo switch
+    {
+        TipoSolicitud.Vacaciones or TipoSolicitud.CanjeDias => dias,
+        TipoSolicitud.Permiso when tp?.DiasDescuento is decimal f => f,
+        _ => 0
+    };
+
     public async Task<PoliticaVacaciones?> Politica(Colaborador c)
         => c.PoliticaVacacionesId is int p
             ? await db.Politicas.Include(x => x.Tabla).FirstOrDefaultAsync(x => x.Id == p)
             : await db.Politicas.Include(x => x.Tabla).FirstOrDefaultAsync(x => x.PorDefecto);
 
-    public async Task<Solicitud> Crear(DatosSolicitud d, int colaboradorId, int usuarioId, bool capturaRh, int? incidenciaId = null)
+    public async Task<Solicitud> Crear(DatosSolicitud d, int colaboradorId, int usuarioId, bool capturaRh, int? incidenciaId = null, string? canal = null)
     {
         var sim = await Simular(d, colaboradorId, capturaRh);
         if (!sim.Valida)
@@ -167,7 +195,8 @@ public class ServicioSolicitudes(AppDb db, MotorAprobaciones motor, ServicioSald
         var s = new Solicitud
         {
             Folio = $"TMP-{Guid.NewGuid():N}"[..20], Tipo = d.Tipo, ColaboradorId = c.Id, SucursalId = c.SucursalId, TipoPermisoId = d.Tipo == TipoSolicitud.Permiso ? d.TipoPermisoId : null,
-            FechaInicio = d.FechaInicio, FechaFin = sim.FechaFin, DiasHabiles = sim.DiasHabiles,
+            FechaInicio = sim.FechaInicio, FechaFin = sim.FechaFin, DiasHabiles = sim.DiasHabiles, Canal = canal,
+            Descuento = DescuentoDe(d.Tipo, sim.DiasHabiles, d.TipoPermisoId is int t ? await db.TiposPermiso.FindAsync(t) : null),
             CoberturaColaboradorId = d.CoberturaColaboradorId, CoberturaNota = d.CoberturaNota?.Trim(), Comentario = d.Comentario?.Trim(),
             ReglaAprobacionId = ruta.Regla!.Id, ReglaNombre = ruta.Regla.Nombre, CapturadaPorUsuarioId = usuarioId, PasoActual = 1, IncidenciaId = incidenciaId,
             Pasos = ruta.Pasos.Select(p => new PasoAprobacion
@@ -179,14 +208,19 @@ public class ServicioSolicitudes(AppDb db, MotorAprobaciones motor, ServicioSald
         s.PasoActual = s.Pasos.Min(p => p.Orden);
         db.Solicitudes.Add(s);
         await db.SaveChangesAsync();
-        s.Folio = (d.Tipo switch { TipoSolicitud.Vacaciones => "VAC-", TipoSolicitud.Permiso => "PER-", _ => "INC-" }) + s.Id.ToString("D5");
-        if (d.Tipo == TipoSolicitud.Vacaciones) await saldos.Comprometer(s, hoy, usuarioId);
+        s.Folio = PrefijoFolio(d.Tipo) + s.Id.ToString("D5");
+        if (s.DiasADescontar > 0) await saldos.Comprometer(s, hoy, usuarioId);
         bitacora.Registrar(c.Id, "solicitud", $"Solicitud de {Mapas.NombreTipoSolicitud(d.Tipo).ToLower()} enviada", TextoPeriodo(s.FechaInicio, s.FechaFin), "Solicitud", s.Id);
         await AvisarPaso(s, hoy);
         await db.SaveChangesAsync();
         eventos.PublicarSucursal(s.SucursalId, "solicitud", new { s.Id, s.Folio });
         return s;
     }
+
+    public static string PrefijoFolio(TipoSolicitud t) => t switch
+    {
+        TipoSolicitud.Vacaciones => "VAC-", TipoSolicitud.Permiso => "PER-", TipoSolicitud.CanjeDias => "CAN-", _ => "INC-"
+    };
 
     private async Task AvisarPaso(Solicitud s, DateOnly hoy)
     {
@@ -207,7 +241,7 @@ public class ServicioSolicitudes(AppDb db, MotorAprobaciones motor, ServicioSald
         if (!ev.Puede) throw ApiException.Prohibido(ev.Motivo ?? "No puedes aprobar esta solicitud.");
 
         // Revalida traslapes al momento de aprobar
-        if (s.Tipo != TipoSolicitud.IncidenciaAsistencia)
+        if (s.OcupaCalendario)
         {
             var tr = await Traslapes(s.ColaboradorId, s.FechaInicio, s.FechaFin, s.Id);
             if (tr.Count > 0) throw ApiException.Validacion(tr[0]);
@@ -235,7 +269,7 @@ public class ServicioSolicitudes(AppDb db, MotorAprobaciones motor, ServicioSald
         {
             s.Estado = EstadoSolicitud.Aprobada;
             s.ResueltaEn = reloj.Ahora;
-            if (s.Tipo == TipoSolicitud.Vacaciones) await saldos.Consumir(s, u.UsuarioId);
+            await saldos.Consumir(s, u.UsuarioId);
             if (s.IncidenciaId is int inc)
             {
                 var i = await db.Incidencias.FindAsync(inc);
@@ -271,7 +305,7 @@ public class ServicioSolicitudes(AppDb db, MotorAprobaciones motor, ServicioSald
         s.Estado = EstadoSolicitud.Rechazada;
         s.MotivoRechazo = motivo.Trim();
         s.ResueltaEn = reloj.Ahora;
-        if (s.Tipo == TipoSolicitud.Vacaciones) await saldos.Liberar(s, u.UsuarioId);
+        await saldos.Liberar(s, u.UsuarioId);
         if (s.IncidenciaId is int inc)
         {
             var i = await db.Incidencias.FindAsync(inc);
@@ -293,7 +327,7 @@ public class ServicioSolicitudes(AppDb db, MotorAprobaciones motor, ServicioSald
         s.ResueltaEn = reloj.Ahora;
         s.MotivoRechazo = motivo;
         foreach (var p in s.Pasos.Where(p => p.Estado is EstadoPaso.Pendiente or EstadoPaso.EnEspera)) p.Estado = EstadoPaso.Omitido;
-        if (s.Tipo == TipoSolicitud.Vacaciones) await saldos.Liberar(s, usuarioId);
+        await saldos.Liberar(s, usuarioId);
         if (s.IncidenciaId is int inc)
         {
             var i = await db.Incidencias.FindAsync(inc);

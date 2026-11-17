@@ -53,6 +53,7 @@ public static class Mapas
         TipoSolicitud.Vacaciones => "Vacaciones",
         TipoSolicitud.Permiso => "Permiso",
         TipoSolicitud.IncidenciaAsistencia => "Incidencia de asistencia",
+        TipoSolicitud.CanjeDias => "Canje de días",
         _ => t.ToString()
     };
 

@@ -275,6 +275,12 @@ namespace WowTime.Api.Data.Migraciones
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("OrigenFirma")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("OrigenId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("PinHash")
                         .HasColumnType("text");
 
@@ -308,6 +314,9 @@ namespace WowTime.Api.Data.Migraciones
                     b.HasIndex("EquipoId");
 
                     b.HasIndex("Numero")
+                        .IsUnique();
+
+                    b.HasIndex("OrigenId")
                         .IsUnique();
 
                     b.HasIndex("PuestoId");
@@ -709,6 +718,9 @@ namespace WowTime.Api.Data.Migraciones
 
                     b.Property<int?>("AutorUsuarioId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Canal")
+                        .HasColumnType("text");
 
                     b.Property<int?>("ColaboradorId")
                         .HasColumnType("integer");
@@ -1453,6 +1465,9 @@ namespace WowTime.Api.Data.Migraciones
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
 
+                    b.Property<long?>("OrigenId")
+                        .HasColumnType("bigint");
+
                     b.Property<double?>("Precision")
                         .HasColumnType("double precision");
 
@@ -1470,6 +1485,9 @@ namespace WowTime.Api.Data.Migraciones
                     b.HasKey("Id");
 
                     b.HasIndex("DispositivoId");
+
+                    b.HasIndex("OrigenId")
+                        .IsUnique();
 
                     b.HasIndex("ColaboradorId", "FechaLocal");
 
@@ -1582,10 +1600,22 @@ namespace WowTime.Api.Data.Migraciones
                     b.Property<int?>("ModificadoPor")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Notas")
+                        .HasColumnType("text");
+
+                    b.Property<string>("OrigenFirma")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("OrigenId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Periodo")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrigenId")
+                        .IsUnique();
 
                     b.HasIndex("ColaboradorId", "Periodo")
                         .IsUnique();
@@ -1600,6 +1630,9 @@ namespace WowTime.Api.Data.Migraciones
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Canal")
+                        .HasColumnType("text");
 
                     b.Property<int>("CapturadaPorUsuarioId")
                         .HasColumnType("integer");
@@ -1621,6 +1654,10 @@ namespace WowTime.Api.Data.Migraciones
 
                     b.Property<int?>("CreadoPor")
                         .HasColumnType("integer");
+
+                    b.Property<decimal?>("Descuento")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)");
 
                     b.Property<decimal>("DiasHabiles")
                         .HasPrecision(8, 2)
@@ -1653,6 +1690,12 @@ namespace WowTime.Api.Data.Migraciones
                     b.Property<string>("MotivoRechazo")
                         .HasColumnType("text");
 
+                    b.Property<string>("OrigenFirma")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("OrigenId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("PasoActual")
                         .HasColumnType("integer");
 
@@ -1681,6 +1724,9 @@ namespace WowTime.Api.Data.Migraciones
                     b.HasIndex("CoberturaColaboradorId");
 
                     b.HasIndex("Folio")
+                        .IsUnique();
+
+                    b.HasIndex("OrigenId")
                         .IsUnique();
 
                     b.HasIndex("TipoPermisoId");
@@ -1793,6 +1839,9 @@ namespace WowTime.Api.Data.Migraciones
                     b.Property<bool>("Activo")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("Clave")
+                        .HasColumnType("text");
+
                     b.Property<bool>("ConGoce")
                         .HasColumnType("boolean");
 
@@ -1801,6 +1850,10 @@ namespace WowTime.Api.Data.Migraciones
 
                     b.Property<int?>("CreadoPor")
                         .HasColumnType("integer");
+
+                    b.Property<decimal?>("DiasDescuento")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)");
 
                     b.Property<int?>("MaximoDias")
                         .HasColumnType("integer");
@@ -1815,7 +1868,13 @@ namespace WowTime.Api.Data.Migraciones
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("Parcial")
+                        .HasColumnType("boolean");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("Clave")
+                        .IsUnique();
 
                     b.ToTable("TiposPermiso");
                 });

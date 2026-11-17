@@ -16,7 +16,7 @@ public class Bitacora(AppDb db, UsuarioActual actual, IReloj reloj)
         {
             ColaboradorId = colaboradorId, Tipo = tipo, Titulo = titulo, Detalle = detalle,
             Fecha = reloj.Ahora, AutorUsuarioId = actual.UsuarioId, AutorNombre = actual.Autenticado ? actual.Nombre : "Sistema",
-            Entidad = entidad, EntidadId = entidadId
+            Canal = actual.Canal, Entidad = entidad, EntidadId = entidadId
         });
     }
 }
@@ -35,6 +35,7 @@ public class Parametros(AppDb db)
     public const string ToleranciaMinutos = "asistencia.tolerancia_minutos";
     public const string RadioGeocerca = "asistencia.radio_geocerca_metros";
     public const string HoraCierreDiario = "asistencia.hora_cierre";
+    public const string ExigirSalida = "asistencia.exigir_salida";
     public const string DocUrgente = "expedientes.umbral_urgente_dias";
     public const string DocProximo = "expedientes.umbral_proximo_dias";
     public const string QrMinAntes = "visitantes.qr_minutos_antes";
@@ -50,6 +51,7 @@ public class Parametros(AppDb db)
         new() { Clave = ToleranciaMinutos, Valor = "10", Descripcion = "Minutos de tolerancia para registrar la entrada en horario", Tipo = "entero", Grupo = "Asistencia" },
         new() { Clave = RadioGeocerca, Valor = "150", Descripcion = "Radio de geocerca por omisión, en metros", Tipo = "entero", Grupo = "Asistencia" },
         new() { Clave = HoraCierreDiario, Valor = "23", Descripcion = "Hora local a partir de la cual se cierra la jornada y se generan faltas", Tipo = "entero", Grupo = "Asistencia" },
+        new() { Clave = ExigirSalida, Valor = "true", Descripcion = "Generar la incidencia \"Salida omitida\" cuando hay entrada pero no salida", Tipo = "booleano", Grupo = "Asistencia" },
         new() { Clave = DocUrgente, Valor = "7", Descripcion = "Días o menos para marcar un documento como Urgente", Tipo = "entero", Grupo = "Expedientes" },
         new() { Clave = DocProximo, Valor = "30", Descripcion = "Días o menos para marcar un documento como Próximo", Tipo = "entero", Grupo = "Expedientes" },
         new() { Clave = QrMinAntes, Valor = "30", Descripcion = "Minutos antes de la llegada en que el QR empieza a ser válido", Tipo = "entero", Grupo = "Visitantes" },

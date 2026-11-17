@@ -130,6 +130,10 @@ public class Colaborador : Auditable
     public string? PinHash { get; set; }
     public int? PoliticaVacacionesId { get; set; }
     public EsquemaTrabajo? Esquema { get; set; }
+    /// <summary>Identificador en el sistema de origen (EmployeeID de InovaOS). Nulo si nació en WOW! Time.</summary>
+    public int? OrigenId { get; set; }
+    /// <summary>Huella de la fila de origen en la última migración; si no cambia, la migración no pisa lo editado aquí.</summary>
+    public string? OrigenFirma { get; set; }
 }
 
 public class Usuario : Auditable
@@ -244,6 +248,8 @@ public class EventoBitacora
     public DateTime Fecha { get; set; }
     public int? AutorUsuarioId { get; set; }
     public string? AutorNombre { get; set; }
+    /// <summary>Canal por el que llegó la operación (por ejemplo "InovaOS"). Nulo = WOW! Time.</summary>
+    public string? Canal { get; set; }
     public string? Entidad { get; set; }
     public int? EntidadId { get; set; }
 }
@@ -286,6 +292,8 @@ public class RegistroAsistencia
     public EstadoRegistro Estado { get; set; }
     public Modalidad Modalidad { get; set; }
     public int? RegistradoPorUsuarioId { get; set; }
+    /// <summary>Identificador del evento en el lector de origen (EventoId de wotime_inova). Evita importar dos veces.</summary>
+    public long? OrigenId { get; set; }
 }
 
 public class IncidenciaAsistencia : Auditable
@@ -342,6 +350,10 @@ public class SaldoVacaciones : Auditable
     public decimal DiasComprometidos { get; set; }
     public decimal DiasVencidos { get; set; }
     public decimal Disponibles => DiasOtorgados - DiasUsados - DiasComprometidos - DiasVencidos;
+    /// <summary>PeriodoID de InovaOS cuando el saldo viene de la migración.</summary>
+    public int? OrigenId { get; set; }
+    public string? OrigenFirma { get; set; }
+    public string? Notas { get; set; }
 }
 
 public class MovimientoSaldo
@@ -360,9 +372,15 @@ public class MovimientoSaldo
 public class TipoPermiso : Auditable
 {
     public int Id { get; set; }
+    /// <summary>Clave fija para integraciones (PERMIT_3H, PERMIT_5H, PERMIT_DAY). Nula en los tipos creados por RH.</summary>
+    public string? Clave { get; set; }
     public string Nombre { get; set; } = "";
     public bool ConGoce { get; set; } = true;
     public int? MaximoDias { get; set; }
+    /// <summary>Si tiene valor, el permiso vale siempre esos días y se descuenta del saldo de vacaciones.</summary>
+    public decimal? DiasDescuento { get; set; }
+    /// <summary>Permiso por horas: no cubre la jornada completa, solo perdona el retardo o la salida anticipada.</summary>
+    public bool Parcial { get; set; }
     public bool Activo { get; set; } = true;
 }
 
@@ -412,6 +430,17 @@ public class Solicitud : Auditable
     public string? MotivoRechazo { get; set; }
     public DateTime? ResueltaEn { get; set; }
     public List<PasoAprobacion> Pasos { get; set; } = [];
+    /// <summary>Días que resta del saldo de vacaciones. Nulo = regla anterior (vacaciones: días hábiles; lo demás: 0).</summary>
+    public decimal? Descuento { get; set; }
+    /// <summary>Canal por el que se capturó (por ejemplo "InovaOS"). Nulo = WOW! Time.</summary>
+    public string? Canal { get; set; }
+    /// <summary>RequestID de InovaOS cuando la solicitud viene de la migración.</summary>
+    public int? OrigenId { get; set; }
+    public string? OrigenFirma { get; set; }
+
+    public decimal DiasADescontar => Descuento ?? (Tipo == TipoSolicitud.Vacaciones ? DiasHabiles : 0);
+    /// <summary>Ocupa días del calendario (el canje de días no).</summary>
+    public bool OcupaCalendario => Tipo is TipoSolicitud.Vacaciones or TipoSolicitud.Permiso;
 }
 
 public class PasoAprobacion

@@ -37,7 +37,7 @@ const asignar = ref<Record<number, number | null>>({})
 const prueba = ref<{ colaboradorId: number | null; tipo: string; resultado: any }>({ colaboradorId: null, tipo: 'Vacaciones', resultado: null })
 
 const ICONOS: Record<string, [string, string]> = { vacaciones: ['vacaciones', '#0aaa4a'], permisos: ['documento', '#2f74d6'], incidencias: ['reloj', '#f26913'], solicitud_supervisor: ['personas', '#2f74d6'] }
-const TIPOS = [{ v: 'Vacaciones', t: 'Vacaciones' }, { v: 'Permiso', t: 'Permisos' }, { v: 'IncidenciaAsistencia', t: 'Incidencias' }]
+const TIPOS = [{ v: 'Vacaciones', t: 'Vacaciones' }, { v: 'Permiso', t: 'Permisos' }, { v: 'CanjeDias', t: 'Canje de días' }, { v: 'IncidenciaAsistencia', t: 'Incidencias' }]
 const APROBADORES = [{ v: 'SupervisorDirecto', t: 'Supervisor directo' }, { v: 'Gerente', t: 'Gerente' }, { v: 'RecursosHumanos', t: 'Recursos Humanos' }]
 
 async function cargarOrg() {

@@ -99,7 +99,7 @@ public class VacacionesController : ApiBase
 
     private async Task<List<Ausencia>> Ausentes(List<int> ids, DateOnly ini, DateOnly fin, bool incluirPendientes = false)
     {
-        var sols = await Db.Solicitudes.Include(s => s.TipoPermiso).Where(s => ids.Contains(s.ColaboradorId) && s.Tipo != TipoSolicitud.IncidenciaAsistencia
+        var sols = await Db.Solicitudes.Include(s => s.TipoPermiso).Where(s => ids.Contains(s.ColaboradorId) && (s.Tipo == TipoSolicitud.Vacaciones || s.Tipo == TipoSolicitud.Permiso)
             && (s.Estado == EstadoSolicitud.Aprobada || (incluirPendientes && s.Estado == EstadoSolicitud.Pendiente)) && s.FechaInicio <= fin && s.FechaFin >= ini).ToListAsync();
         var incs = await Db.Incapacidades.Where(i => ids.Contains(i.ColaboradorId) && !i.Cancelada && i.FechaInicio <= fin && i.FechaFin >= ini).ToListAsync();
         var res = sols.Select(s => new Ausencia(s.ColaboradorId, s.FechaInicio, s.FechaFin,
@@ -284,7 +284,7 @@ public class VacacionesController : ApiBase
         if (d.FechaFin < d.FechaInicio) throw ApiException.Validacion("La fecha de término no puede ser anterior a la de inicio.");
         if (await Db.Incapacidades.AnyAsync(i => i.ColaboradorId == d.ColaboradorId && !i.Cancelada && i.FechaInicio <= d.FechaFin && i.FechaFin >= d.FechaInicio))
             throw ApiException.Validacion("Se traslapa con otra incapacidad del colaborador.");
-        var pend = await Db.Solicitudes.Where(s => s.ColaboradorId == d.ColaboradorId && s.Estado == EstadoSolicitud.Pendiente && s.Tipo != TipoSolicitud.IncidenciaAsistencia && s.FechaInicio <= d.FechaFin && s.FechaFin >= d.FechaInicio).Select(s => s.Folio).ToListAsync();
+        var pend = await Db.Solicitudes.Where(s => s.ColaboradorId == d.ColaboradorId && s.Estado == EstadoSolicitud.Pendiente && (s.Tipo == TipoSolicitud.Vacaciones || s.Tipo == TipoSolicitud.Permiso) && s.FechaInicio <= d.FechaFin && s.FechaFin >= d.FechaInicio).Select(s => s.Folio).ToListAsync();
         if (pend.Count > 0) throw ApiException.Validacion($"Se traslapa con la solicitud pendiente {pend[0]}. Cancélala o recházala primero.");
         var i = new Incapacidad { ColaboradorId = d.ColaboradorId, FechaInicio = d.FechaInicio, FechaFin = d.FechaFin, Folio = d.Folio, Tipo = d.Tipo, Nota = d.Nota, DocumentoId = d.DocumentoId };
         Db.Incapacidades.Add(i);

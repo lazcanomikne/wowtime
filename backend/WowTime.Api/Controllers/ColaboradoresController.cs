@@ -482,7 +482,7 @@ public class ColaboradoresController : ApiBase
             throw ApiException.Validacion("El colaborador no tiene un domicilio autorizado para home office. Regístralo primero en su esquema de trabajo.");
         if (await Db.Asignaciones.AnyAsync(a => a.ColaboradorId == colaboradorId && a.Id != excluir && !a.Cancelada && a.FechaInicio <= d.FechaFin && a.FechaFin >= d.FechaInicio))
             throw ApiException.Validacion("Se traslapa con otra asignación temporal del colaborador.");
-        if (await Db.Solicitudes.AnyAsync(s => s.ColaboradorId == colaboradorId && s.Tipo != TipoSolicitud.IncidenciaAsistencia && (s.Estado == EstadoSolicitud.Pendiente || s.Estado == EstadoSolicitud.Aprobada) && s.FechaInicio <= d.FechaFin && s.FechaFin >= d.FechaInicio))
+        if (await Db.Solicitudes.AnyAsync(s => s.ColaboradorId == colaboradorId && (s.Tipo == TipoSolicitud.Vacaciones || s.Tipo == TipoSolicitud.Permiso) && (s.Estado == EstadoSolicitud.Pendiente || s.Estado == EstadoSolicitud.Aprobada) && s.FechaInicio <= d.FechaFin && s.FechaFin >= d.FechaInicio))
             throw ApiException.Validacion("Se traslapa con una solicitud de vacaciones o permiso del colaborador.");
     }
 

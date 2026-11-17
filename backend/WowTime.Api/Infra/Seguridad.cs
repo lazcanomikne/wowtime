@@ -46,6 +46,10 @@ public class UsuarioActual(IHttpContextAccessor http) : IUsuarioActualAccessor
     public int? ColaboradorId => int.TryParse(P?.FindFirstValue("cid"), out var v) ? v : null;
     public string Nombre => P?.FindFirstValue("name") ?? "";
     public bool EsLlaveApi => P?.FindFirstValue("tipo") == "llave";
+    /// <summary>Canal de la operación cuando una integración actúa en nombre del usuario (por ejemplo "InovaOS").</summary>
+    public string? Canal => P?.FindFirstValue("canal");
+    /// <summary>Correo de X-Actuar-Como que no corresponde a un usuario activo.</summary>
+    public string? ActuarComoNoEncontrado => P?.FindFirstValue("actuar_no_encontrado");
     public IReadOnlyList<string> Roles => P?.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList() ?? [];
     public HashSet<string> PermisosSet => P?.FindAll("perm").Select(c => c.Value).ToHashSet() ?? [];
     public bool Tiene(string permiso) => PermisosSet.Contains(permiso);
@@ -149,6 +153,8 @@ public class LlaveApiHandler(IOptionsMonitor<AuthenticationSchemeOptions> o, ILo
     : AuthenticationHandler<AuthenticationSchemeOptions>(o, l, e)
 {
     public const string Esquema = "LlaveApi";
+    /// <summary>Rutas donde una llave con integracion.inovaos puede actuar como un usuario (X-Actuar-Como).</summary>
+    public const string RutaInovaOS = "/api/v1/integracion/inovaos";
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         if (!Request.Headers.TryGetValue("X-Api-Key", out var valor) || string.IsNullOrWhiteSpace(valor)) return AuthenticateResult.NoResult();
@@ -160,6 +166,35 @@ public class LlaveApiHandler(IOptionsMonitor<AuthenticationSchemeOptions> o, ILo
             return AuthenticateResult.Fail("Llave inválida o revocada");
         k.UltimoUso = reloj.Ahora;
         await db.SaveChangesAsync();
+
+        // Integración InovaOS: la llave actúa con los permisos y el alcance del usuario indicado, solo en sus rutas
+        if (k.Permisos.Contains(Permisos.IntegracionInovaOS) && Request.Path.StartsWithSegments(RutaInovaOS)
+            && Request.Headers.TryGetValue("X-Actuar-Como", out var como) && !string.IsNullOrWhiteSpace(como))
+        {
+            var correo = como.ToString().Trim().ToLowerInvariant();
+            var u = await db.Usuarios.Include(x => x.Colaborador)
+                .Where(x => x.Activo && (x.Email.ToLower() == correo || (x.Colaborador != null && x.Colaborador.Email != null && x.Colaborador.Email.ToLower() == correo)))
+                .OrderBy(x => x.Email.ToLower() == correo ? 0 : 1).FirstOrDefaultAsync();
+            if (u is not null && (u.Colaborador is null || u.Colaborador.Estatus != EstatusColaborador.Baja))
+            {
+                var perms = await db.RolPermisos.Where(x => u.Roles.Contains(x.Rol)).Select(x => x.Permiso).Distinct().ToListAsync();
+                perms.Add(Permisos.IntegracionInovaOS);
+                var uc = new List<Claim>
+                {
+                    new("uid", u.Id.ToString()), new("name", u.Nombre), new("tipo", "usuario"), new("canal", "InovaOS"), new("llave", k.Id.ToString())
+                };
+                if (u.ColaboradorId is int cid) uc.Add(new("cid", cid.ToString()));
+                uc.AddRange(u.Roles.Select(r => new Claim(ClaimTypes.Role, r)));
+                uc.AddRange(perms.Distinct().Select(p => new Claim("perm", p)));
+                uc.AddRange(u.Sucursales.Select(s => new Claim("suc", s.ToString())));
+                return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(uc, Esquema, "name", ClaimTypes.Role)), Esquema));
+            }
+            var fallo = new List<Claim> { new("tipo", "llave"), new("name", $"Llave: {k.Nombre}"), new("llave", k.Id.ToString()), new("actuar_no_encontrado", correo) };
+            fallo.AddRange(k.Permisos.Select(p => new Claim("perm", p)));
+            fallo.AddRange(k.Sucursales.Select(s => new Claim("suc", s.ToString())));
+            return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(fallo, Esquema, "name", ClaimTypes.Role)), Esquema));
+        }
+
         var claims = new List<Claim> { new("tipo", "llave"), new("name", $"Llave: {k.Nombre}"), new("llave", k.Id.ToString()) };
         claims.AddRange(k.Permisos.Select(p => new Claim("perm", p)));
         claims.AddRange(k.Sucursales.Select(s => new Claim("suc", s.ToString())));
