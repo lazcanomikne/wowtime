@@ -79,6 +79,16 @@ Registra la tarea (PowerShell como administrador):
 
 El historial de ejecuciones se ve en **Configuración → Tareas programadas**.
 
+### Integración con InovaOS
+
+Antes del corte, que requiere tu visto bueno, sigue `docs/INTEGRACION_INOVAOS.md`, secciones 6 y 7:
+
+1. En el `.env` de producción, pon `ConnectionStrings__Origen`, `ConnectionStrings__OrigenChecadas` y `Integracion__InovaOS__CorreosRh`.
+2. Corre `dotnet WowTime.Api.dll migrar-inovaos`.
+3. Crea la llave con `integracion.inovaos` y `sucursales.todas`.
+4. Enciende `Integracion__InovaOS__Activa=true`.
+5. Registra la tarea de checadas con `backend\registrar-tareas.ps1 ... -InovaOS`.
+
 ## 5. Respaldo de la base
 
 - `backend\respaldar-bd.ps1` genera un respaldo comprimido con `pg_dump` en `C:\Desarrollo\wowtime-data\respaldos` (parámetro `-Destino`) y conserva 14 días (`-Dias`).

@@ -2,7 +2,8 @@ namespace WowTime.Api.Domain;
 
 public enum EstatusColaborador { Activo, Inactivo, Baja }
 public enum Modalidad { Presencial, Hibrido, HomeOffice }
-public enum MetodoRegistro { Terminal, App, TerminalYApp }
+/// <summary>Ninguno: no registra asistencia (no se le generan faltas).</summary>
+public enum MetodoRegistro { Terminal, App, TerminalYApp, Ninguno }
 public enum TipoAsignacion { HomeOffice, OtraSucursal, Comision }
 public enum TipoUbicacion { Domicilio, Otro }
 public enum TipoRegistro { Entrada, Salida }

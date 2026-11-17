@@ -40,6 +40,9 @@ builder.Services.AddScoped<ServicioAsistencia>();
 builder.Services.AddScoped<TareasProgramadas>();
 builder.Services.AddScoped<Semilla>();
 builder.Services.AddHostedService<TrabajadorTareas>();
+builder.Services.AddScoped<WowTime.Api.Services.Integracion.IOrigenInova, WowTime.Api.Services.Integracion.SqlOrigenInova>();
+builder.Services.AddScoped<WowTime.Api.Services.Integracion.MigradorInova>();
+builder.Services.AddHostedService<WowTime.Api.Services.Integracion.TrabajadorInovaOS>();
 
 builder.Services.Configure<OpcionesJwt>(cfg.GetSection("Jwt"));
 var jwtClave = cfg["Jwt:Clave"];
@@ -115,6 +118,28 @@ builder.Services.AddSwaggerGen(o =>
 });
 
 var app = builder.Build();
+
+// Comandos de consola: migración e importación desde InovaOS (docs/INTEGRACION_INOVAOS.md)
+if (args.Contains("migrar-inovaos") || args.Contains("importar-checadas"))
+{
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<AppDb>().Database.MigrateAsync();
+    await scope.ServiceProvider.GetRequiredService<Semilla>().Catalogos();
+    var mig = scope.ServiceProvider.GetRequiredService<WowTime.Api.Services.Integracion.MigradorInova>();
+    WowTime.Api.Services.Integracion.InformeMigracion inf;
+    if (args.Contains("migrar-inovaos"))
+    {
+        var o = WowTime.Api.Services.Integracion.OpcionesMigracion.DesdeConfiguracion(cfg);
+        o.ImportarChecadas = !args.Contains("--sin-checadas");
+        o.CerrarHistorico = !args.Contains("--sin-cierre");
+        o.AjustarReglas = !args.Contains("--sin-ajustes");
+        inf = await mig.Migrar(o);
+    }
+    else inf = await mig.ImportarChecadas();
+    foreach (var kv in inf.Conteos) Console.WriteLine($"{kv.Key}: {kv.Value}");
+    foreach (var a in inf.Avisos) Console.WriteLine($"Aviso: {a}");
+    return;
+}
 
 // Comandos de consola: migrar, semilla
 if (args.Contains("migrar") || args.Contains("semilla"))

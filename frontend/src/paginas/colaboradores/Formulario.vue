@@ -13,7 +13,7 @@ import { DIAS_SEMANA, GENEROS, MODALIDADES, REGISTROS, erroresPorCampo } from '.
 
 interface Opcion { id: number; nombre: string }
 type Modalidad = 'Presencial' | 'Hibrido' | 'HomeOffice'
-type Registro = 'Terminal' | 'App' | 'TerminalYApp'
+type Registro = 'Terminal' | 'App' | 'TerminalYApp' | 'Ninguno'
 
 const route = useRoute()
 const router = useRouter()

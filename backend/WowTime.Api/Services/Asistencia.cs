@@ -159,13 +159,13 @@ public class ServicioAsistencia(AppDb db, IReloj reloj, Parametros parametros, B
         return reg;
     }
 
-    public async Task<IncidenciaAsistencia?> CrearIncidencia(Colaborador c, DateOnly fecha, TipoIncidencia tipo, long? registroId, string detalle)
+    public async Task<IncidenciaAsistencia?> CrearIncidencia(Colaborador c, DateOnly fecha, TipoIncidencia tipo, long? registroId, string detalle, bool notificar = true)
     {
         if (await db.Incidencias.AnyAsync(i => i.ColaboradorId == c.Id && i.Fecha == fecha && i.Tipo == tipo)) return null;
         var inc = new IncidenciaAsistencia { ColaboradorId = c.Id, SucursalId = c.SucursalId, Fecha = fecha, Tipo = tipo, RegistroId = registroId, Detalle = detalle };
         db.Incidencias.Add(inc);
         await db.SaveChangesAsync();
-        if (c.SupervisorId is int sup)
+        if (notificar && c.SupervisorId is int sup)
             await notif.EnviarAColaborador(sup, "incidencia", $"Incidencia por revisar: {c.Nombres} {c.Apellidos}",
                 $"{Mapas.NombreIncidencia(tipo)} · {fecha:dd/MM/yyyy}", $"/asistencia?tab=incidencias&id={inc.Id}", $"inc:{inc.Id}");
         eventos.PublicarSucursal(c.SucursalId, "incidencia", new { inc.Id });
@@ -173,7 +173,7 @@ public class ServicioAsistencia(AppDb db, IReloj reloj, Parametros parametros, B
     }
 
     /// <summary>Cierre diario: faltas por ausencia de entrada y salidas omitidas. Idempotente.</summary>
-    public async Task<(int faltas, int salidas)> CerrarDia(DateOnly fecha)
+    public async Task<(int faltas, int salidas)> CerrarDia(DateOnly fecha, bool notificar = true)
     {
         int faltas = 0, salidas = 0;
         var exigirSalida = await parametros.Booleano(Parametros.ExigirSalida, true);
@@ -182,17 +182,18 @@ public class ServicioAsistencia(AppDb db, IReloj reloj, Parametros parametros, B
         var regs = await db.Registros.Where(r => r.FechaLocal == fecha).Select(r => new { r.ColaboradorId, r.Tipo, r.Id }).ToListAsync();
         foreach (var c in colaboradores)
         {
+            if (c.Esquema?.RegistroPermitido == MetodoRegistro.Ninguno) continue;
             var j = await JornadaDe(c, fecha);
             if (j.DiaDescanso || j.Festivo is not null || j.Ausencia is not null) continue;
             var mios = regs.Where(r => r.ColaboradorId == c.Id).ToList();
             if (!mios.Any(r => r.Tipo == TipoRegistro.Entrada))
             {
-                if (await CrearIncidencia(c, fecha, TipoIncidencia.Falta, null, "Sin registro de entrada en la jornada.") is not null) faltas++;
+                if (await CrearIncidencia(c, fecha, TipoIncidencia.Falta, null, "Sin registro de entrada en la jornada.", notificar) is not null) faltas++;
             }
             else if (exigirSalida && !mios.Any(r => r.Tipo == TipoRegistro.Salida))
             {
                 var e = mios.First(r => r.Tipo == TipoRegistro.Entrada);
-                if (await CrearIncidencia(c, fecha, TipoIncidencia.SalidaOmitida, e.Id, "Hay entrada pero no se registró la salida.") is not null) salidas++;
+                if (await CrearIncidencia(c, fecha, TipoIncidencia.SalidaOmitida, e.Id, "Hay entrada pero no se registró la salida.", notificar) is not null) salidas++;
             }
         }
         return (faltas, salidas);

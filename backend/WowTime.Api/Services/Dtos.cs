@@ -78,6 +78,7 @@ public static class Mapas
         MetodoRegistro.Terminal => "Solo terminal",
         MetodoRegistro.App => "Solo app móvil",
         MetodoRegistro.TerminalYApp => "Terminal + app móvil",
+        MetodoRegistro.Ninguno => "No registra asistencia",
         _ => m.ToString()
     };
 

@@ -149,8 +149,17 @@ Si la sesión se reinicia: leer este archivo y `docs/DECISIONES.md`, y retomar e
 - [x] Documentación OpenAPI de todos los endpoints
 - [x] README, DECISIONES y DESPLIEGUE completos
 
+## Integración con InovaOS
+- [x] OrigenId único en Colaborador (EmployeeID), Solicitud (RequestID), saldos (PeriodoID) y checadas (EventoId)
+- [x] Permisos de 3 h (0.3), 5 h (0.5) y día completo (1) que descuentan saldo, y canje de días (CASH_OUT)
+- [x] Permiso integracion.inovaos y X-Actuar-Como, con bitácora del canal
+- [x] 9 endpoints de /api/v1/integracion/inovaos con pruebas contra el contrato
+- [x] Migración idempotente desde las vistas wowtime.* (verificada contra producción en una base local aparte)
+- [x] Importación de checadas cada 15 minutos (apagada por omisión)
+- [ ] Corte: correos de RH, base de producción, llave, encender InovaOS (requiere el visto bueno del usuario)
+
 ## Cómo se verificó
 
-- **Back**: 43 pruebas xUnit (`backend/WowTime.Tests`): reglas puras (días hábiles con el caso obligatorio del 15 al 19 de septiembre de 2026 = 3, traslapes, estado de asistencia, geocerca, vigencia y firma del QR, vigencia de documentos, antigüedad, cobertura, festivos) y recorridos de la API contra PostgreSQL (ruta Gerente → RH, flujo completo con saldo y calendario, delegación y separación de funciones, autoaprobación, saldo insuficiente, traslapes y liberación de saldo, colaborador sin supervisor, entrada y salida con geocerca, invitado con QR, documento con alerta, permisos y alcance por sucursal, llaves de API, recuperación y cambio de contraseña, tareas programadas idempotentes).
+- **Back**: 50 pruebas xUnit (`backend/WowTime.Tests`): reglas puras (días hábiles con el caso obligatorio del 15 al 19 de septiembre de 2026 = 3, traslapes, estado de asistencia, geocerca, vigencia y firma del QR, vigencia de documentos, antigüedad, cobertura, festivos) y recorridos de la API contra PostgreSQL (ruta Gerente → RH, flujo completo con saldo y calendario, delegación y separación de funciones, autoaprobación, saldo insuficiente, traslapes y liberación de saldo, colaborador sin supervisor, entrada y salida con geocerca, invitado con QR, documento con alerta, permisos y alcance por sucursal, llaves de API, recuperación y cambio de contraseña, tareas programadas idempotentes).
 - **Punta a punta**: 5 recorridos en navegador (`frontend/e2e/recorridos.spec.ts`) y una prueba de humo que recorre todas las pantallas con cada rol sin errores de JavaScript ni respuestas 4xx/5xx (`frontend/e2e/humo.spec.ts`).
 - **Visual**: capturas de las 11 pantallas diseñadas en `docs/capturas/`, comparadas con `docs/mockups/` (ver `docs/capturas/COMPARACION.md`).

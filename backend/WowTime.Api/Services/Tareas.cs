@@ -10,9 +10,9 @@ namespace WowTime.Api.Services;
 /// y pueden dispararse desde el Programador de tareas de Windows con POST /api/v1/tareas/ejecutar.
 /// </summary>
 public class TareasProgramadas(AppDb db, IReloj reloj, Parametros parametros, ServicioSaldos saldos, ServicioAsistencia asistencia,
-    Notificador notif, ILogger<TareasProgramadas> log)
+    Notificador notif, ILogger<TareasProgramadas> log, IServiceProvider sp, IConfiguration cfg)
 {
-    public static readonly string[] Nombres = ["asignaciones", "qr", "saldos", "vencimiento_dias", "documentos", "cumpleanos", "cierre_asistencia"];
+    public static readonly string[] Nombres = ["asignaciones", "qr", "saldos", "vencimiento_dias", "documentos", "cumpleanos", "checadas_inovaos", "cierre_asistencia"];
 
     public async Task<Dictionary<string, string>> EjecutarTodas()
     {
@@ -38,6 +38,7 @@ public class TareasProgramadas(AppDb db, IReloj reloj, Parametros parametros, Se
             "documentos" => await Documentos(hoy),
             "cumpleanos" => await Cumpleanos(hoy),
             "cierre_asistencia" => await CierreAsistencia(hoy),
+            "checadas_inovaos" => await ChecadasInovaOS(),
             _ => throw ApiException.NoEncontrado("La tarea")
         };
         var ej = await db.EjecucionesTarea.FirstOrDefaultAsync(e => e.Tarea == nombre && e.Fecha == hoy);
@@ -45,6 +46,14 @@ public class TareasProgramadas(AppDb db, IReloj reloj, Parametros parametros, Se
         ej.Inicio = inicio; ej.Fin = reloj.Ahora; ej.Resultado = r;
         await db.SaveChangesAsync();
         return r;
+    }
+
+    /// <summary>Importa las checadas nuevas del lector de InovaOS. Solo con Integracion__InovaOS__Activa=true.</summary>
+    private async Task<string> ChecadasInovaOS()
+    {
+        if (cfg["Integracion:InovaOS:Activa"] != "true") return "Integración con InovaOS apagada";
+        var r = await sp.GetRequiredService<Integracion.MigradorInova>().ImportarChecadas();
+        return r.Conteos.Count == 0 ? "Sin checadas nuevas" : r.ToString();
     }
 
     private async Task<string> Asignaciones(DateOnly hoy)

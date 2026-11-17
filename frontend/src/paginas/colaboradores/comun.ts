@@ -11,6 +11,7 @@ export const REGISTROS = [
   { v: 'Terminal', t: 'Solo terminal', icono: 'terminal' },
   { v: 'App', t: 'Solo app móvil', icono: 'celular' },
   { v: 'TerminalYApp', t: 'Terminal + app móvil', icono: 'monitor' },
+  { v: 'Ninguno', t: 'No registra asistencia', icono: 'x' },
 ] as const
 
 export const ESTATUS = [

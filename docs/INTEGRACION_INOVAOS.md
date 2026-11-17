@@ -146,3 +146,103 @@ Pendiente para el corte, del lado de InovaOS:
 2. Se crea la llave `integracion.inovaos`. Se prueba InovaOS en desarrollo (puerto 7110) con `VACACIONES_ORIGEN=wowtime` apuntando a WOW! Time.
 3. Última migración. En el `.env` de IIS se ponen las variables, se recicla el pool `PortalInova_Back` y se verifica en el portal y en InovaWay. Publicar en producción requiere el visto bueno del usuario.
 4. Las tablas de vacaciones de InovaOS quedan como histórico. Para regresar, basta con quitar `VACACIONES_ORIGEN` y reciclar el pool, pero lo pedido mientras tanto vivirá solo en WOW! Time.
+
+## 7. Implementación en WOW! Time (17 de noviembre de 2026)
+
+Las secciones 1 a 4 están construidas y probadas. **No hay nada publicado** en IIS ni en Vercel, y el `.env` de IIS de InovaOS no se tocó.
+
+| Pieza | Dónde |
+| --- | --- |
+| 9 endpoints | `backend/WowTime.Api/Controllers/IntegracionInovaOSController.cs` |
+| `X-Actuar-Como` | `Infra/Seguridad.cs` (`LlaveApiHandler`). Solo funciona con una llave con `integracion.inovaos` y solo en `/api/v1/integracion/inovaos/*`. Fuera de esas rutas la llave no toma los permisos del usuario |
+| Migración y checadas | `Services/Integracion/OrigenInova.cs` (lectura) y `Services/Integracion/MigradorInova.cs` |
+| Pruebas del contrato | `backend/WowTime.Tests/IntegracionInovaOSTests.cs` (6) y `MigracionInovaOSTests.cs` (1, con origen falso) |
+
+Verificación:
+
+- **Pruebas:** 50 pruebas del back y 10 en navegador pasan.
+- **Migración real:** se corrió contra las vistas de producción (solo lectura) en una base local aparte, `wowtime_inova`. Llegaron 31 colaboradores, 179 periodos, 453 solicitudes, 183 entradas y 128 salidas. **El disponible del periodo vigente coincide con InovaOS en los 31 colaboradores.** La segunda corrida no cambió nada.
+- **Adaptador de InovaOS:** se llamó a `services/wowtime/vacaciones.js`, sin modificarlo, contra esa base. Funcionaron mis vacaciones, autorizaciones con su cadena, calendario, empleados, reportes y el 404 por correo desconocido.
+
+### Detalles del contrato (sin cambios incompatibles)
+
+Nada de esto rompe el adaptador de InovaOS ni sus pruebas:
+
+- **`tipo`:** puede valer `PERMIT_OTHER` para un permiso de WOW! Time sin clave. La migración desactiva esos tipos porque InovaOS no los maneja, así que en la práctica no aparece.
+- **Errores:**
+  - `400 falta_actuar_como`: una ruta "como usuario" llegó sin el encabezado.
+  - `403 sin_permiso`: el usuario no puede crear solicitudes.
+  - `404 solicitud_no_encontrada`.
+  - `422` con códigos `tipo_invalido`, `dias_invalidos`, `rango_invalido`, `saldo_insuficiente`, `traslape`, `fechas_pasadas`, `sin_supervisor` y `estado_invalido`.
+- **Rechazar:** acepta `comentario: null`; WOW! Time guarda "Rechazada sin comentario.".
+- **`GET /ausencias`:** sin `desde`, usa los últimos 60 días.
+- **Filtros del reporte:** `GET /solicitudes` acepta `estado` como lista separada por comas, igual que `tipo`.
+- **`dias` y `descuento` en permisos:** valen 0.3, 0.5 o 1. Un permiso de valor fijo debe ser de un solo día (`inicio = fin`).
+- **Canje (`CASH_OUT`):** WOW! Time ignora `inicio` y `fin` y guarda la fecha del día.
+
+### Cómo se migra
+
+```bash
+dotnet WowTime.Api.dll migrar-inovaos
+```
+
+Opciones del comando:
+
+- `--sin-checadas`: no importa checadas.
+- `--sin-cierre`: no genera faltas de días pasados.
+- `--sin-ajustes`: no ajusta escala, parámetros ni tipos de permiso.
+
+```bash
+dotnet WowTime.Api.dll importar-checadas
+```
+
+Variables de entorno (en `backend/WowTime.Api/.env`):
+
+| Variable | Para qué |
+| --- | --- |
+| `ConnectionStrings__Origen`, `ConnectionStrings__OrigenChecadas` | Usuario de solo lectura `wowtime_lectura` |
+| `Integracion__InovaOS__CorreosRh` | Correos, separados por coma, que reciben el rol Recursos Humanos. Si no hay ninguno, lo recibe Dirección General |
+| `Integracion__InovaOS__Activa=true` | Enciende la importación de checadas cada 15 minutos y la tarea `checadas_inovaos`. **Apagada por omisión** |
+| `Integracion__InovaOS__MigrarCadaHora=true` | Durante la transición, vuelve a migrar cada hora |
+| `Integracion__InovaOS__Sucursal` | Sucursal única. Por omisión, `Monterrey` |
+
+Con IIS, la importación cada 15 minutos también se puede registrar en el Programador de tareas: `backend\registrar-tareas.ps1 -InovaOS`.
+
+### Reglas de la migración
+
+- **Idempotente:** cada fila guarda su `OrigenId` y una huella de la fila de origen. Si la fila no cambió, la migración no toca lo que ya se editó o decidió en WOW! Time; si cambió en InovaOS antes del corte, se reconstruye desde el origen.
+- **Jefe directo:** sale de `ManagerID`. Quien no tiene jefe queda bajo Dirección General, como aprobaba InovaOS, y se avisa en el informe. Dirección General es la raíz: sus propias solicitudes las captura RH.
+- **Roles:**
+  - Cada colaborador recibe un usuario sin contraseña. Puede actuar por InovaOS y, en WOW! Time, entrar con "¿Olvidaste tu contraseña?".
+  - Quien tiene reportes recibe el rol Supervisor.
+  - Dirección General recibe el rol Administrador.
+- **Número de colaborador:** es el del lector. Si no hay, se usa `INV-<EmployeeID>`. Quien no tiene número en el lector queda con el registro "No registra asistencia", así no se le generan faltas.
+- **Periodos:** el periodo N de InovaOS es el saldo de N−1 años cumplidos. Vence en `FechaFin` y respeta `DiasDerecho` y sus `Notas`.
+- **Solicitudes según su estado:**
+  - Aprobadas: consumen su periodo (`PeriodoID`).
+  - Pendientes: comprometen saldo y siguen en el mismo paso, con los titulares de InovaOS.
+  - Rechazadas: no mueven saldo.
+  - Con `SinDescuento`: descuentan 0.
+- **Horas:** `CreatedAt` de InovaOS está en hora de Monterrey. `ActedAt`, `BossApprovedDate`, `DirectorApprovedDate` y las fechas de las justificaciones están en UTC. Se verificó con los datos: ninguna decisión quedaba antes de su creación.
+- **Checadas:**
+  - Solo se importan desde `InicioCalculo` (2026-10-29).
+  - La primera checada del día es la entrada y la última es la salida.
+  - Una checada a menos de 2 minutos de la anterior se ignora.
+  - Las checadas de números que no corresponden a nadie en InovaOS se cuentan y se avisan. Hoy son `0001`, `18`, `5` y `9`, con 57 eventos.
+- **Ajustes con `AjustarReglas`:**
+  - La escala de vacaciones se toma de `VacationTiers`.
+  - La tolerancia de 10 minutos se copia.
+  - Se apaga "Salida omitida" (parámetro `asistencia.exigir_salida`).
+  - Se desactivan los tipos de permiso sin clave.
+- **Retardos:** los permisos de 3 y 5 horas los perdonan y no cubren la jornada.
+
+### Pendiente para el corte (requiere tu visto bueno)
+
+1. **Correos de RH:** definir `Integracion__InovaOS__CorreosRh` y volver a migrar. Hoy el rol RH cae en Dirección General.
+2. **Ruta de aprobación:**
+   - Las solicitudes nuevas siguen las reglas de WOW! Time: supervisor directo → RH, o gerente → RH para quien tiene reportes.
+   - InovaOS subía por la cadena de jefes. Si se quiere igual, se cambia en Configuración → Reglas de aprobación.
+   - Las pendientes migradas conservan la cadena de InovaOS.
+3. **Base de producción:** crear la base de WOW! Time de producción, correr `migrar-inovaos` y crear la llave `integracion.inovaos` (permisos `integracion.inovaos` y `sucursales.todas`).
+4. **Encender InovaOS:** probar InovaOS en desarrollo (puerto 7110) con `VACACIONES_ORIGEN=wowtime`; después, el `.env` de IIS de InovaOS y el reciclado del pool.
+5. **Coordenadas de la sucursal Monterrey:** capturarlas si se va a usar la geocerca de la app.

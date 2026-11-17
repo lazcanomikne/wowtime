@@ -71,3 +71,19 @@ Decisiones tomadas por cuenta propia durante la construcción. Las "Decisiones y
 2. **Punta a punta**: Playwright levanta su propia API (puerto 5081, base `wowtime_test`) y su propio front (5174), así no dependen ni alteran el entorno de desarrollo.
 3. **Reloj simulado (solo demostración)**: la variable `Reloj__Simular=AAAA-MM-DDTHH:mm:ss` desplaza la hora del servidor. Se usa únicamente para las capturas (12:15 de hoy), para que el dashboard se vea "vivo" aunque se generen de madrugada. El token JWT siempre usa el reloj real. Nunca se activa en producción.
 4. **Datos de demostración**: María Fernández nunca tiene registro del día (para la prueba de entrada y salida); nadie cumple aniversario laboral el día de la carga y ningún saldo de demostración queda negativo.
+
+## Integración con InovaOS (17 de noviembre de 2026)
+
+Contrato y detalle en `docs/INTEGRACION_INOVAOS.md`.
+
+1. **Actuar como:** `X-Actuar-Como` solo se acepta con una llave que tenga `integracion.inovaos`, y solo en `/api/v1/integracion/inovaos/*`. El usuario se busca por el correo de su usuario o el de su ficha, sin distinguir mayúsculas. La bitácora guarda al usuario real y el canal "InovaOS" (columna nueva `Canal`).
+2. **El permiso `integracion.inovaos` no se asigna a ningún rol**, ni siquiera a Administrador: es solo para llaves.
+3. **Permisos de valor fijo:** son `TipoPermiso` con `Clave` (PERMIT_3H, PERMIT_5H, PERMIT_DAY), `DiasDescuento` (0.3, 0.5, 1) y `Parcial` (los de horas). Descuentan del saldo de vacaciones como en InovaOS. Los parciales perdonan el retardo y no cubren la jornada.
+4. **Canje de días:** es el tipo nuevo `CanjeDias`. Consume saldo, no ocupa calendario ni cuenta para traslapes y sigue la regla de aprobación de vacaciones.
+5. **`Solicitud.Descuento`:** guarda lo que se resta del saldo. Si es nulo, aplica la regla anterior: vacaciones descuentan sus días hábiles y lo demás 0.
+6. **"No registra asistencia":** es una opción nueva del esquema de trabajo. A quien la tiene no se le generan faltas. La migración la pone a quien no tiene número en el lector.
+7. **Salida omitida configurable** (`asistencia.exigir_salida`): en InovaOS casi todos checan solo al llegar.
+8. **Periodos de InovaOS:** el periodo N corresponde al saldo de N−1 años cumplidos, con la fecha límite de InovaOS.
+9. **Sin jefe en InovaOS:** se asigna a Dirección General, porque InovaOS hacía aprobar a Dirección.
+10. **Días festivos:** WOW! Time sí descuenta los festivos oficiales de los días hábiles; InovaOS no lo hacía porque su tabla está vacía. Se conserva la regla de WOW! Time porque WOW! Time es ahora la fuente de verdad.
+11. **Migración de prueba:** se corrió en una base local aparte (`wowtime_inova`, en la instancia propia del proyecto), no en la de demostración.
