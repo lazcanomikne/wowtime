@@ -199,7 +199,7 @@ const otorgadosRef = (x: any) => Math.max(Number(x.otorgados) || 0, 1)
         <section class="tarjeta">
           <div class="tarjeta-cabecera"><h2 class="titulo-tarjeta">Solicitudes por resolver</h2><button class="ver-todo" @click="irTab('solicitudes')">Ver todas</button></div>
           <div class="tabla-envoltura">
-            <table class="tabla">
+            <table class="tabla compacta-t">
               <thead><tr><th>Colaborador</th><th>Periodo</th><th class="num">Días</th><th class="num">Saldo disp.</th><th>Cobertura</th><th>Acciones</th></tr></thead>
               <tbody>
                 <tr v-for="x in porResolver" :key="x.id" data-prueba="fila-por-resolver">
@@ -207,7 +207,7 @@ const otorgadosRef = (x: any) => Math.max(Number(x.otorgados) || 0, 1)
                   <td class="nw"><RouterLink :to="`/solicitudes/${x.id}`">{{ rango(x.fechaInicio, x.fechaFin, true) }}</RouterLink></td>
                   <td class="num">{{ num(x.diasHabiles) }}</td>
                   <td class="num" :class="{ bajo: x.saldoDisponible !== null && x.saldoDisponible < 0 }">{{ num(x.saldoDisponible, 1) }}</td>
-                  <td><Persona v-if="x.cobertura" :p="x.cobertura" :sub="x.cobertura.area" :t="30" /><span v-else class="muted">{{ x.coberturaNota || '—' }}</span></td>
+                  <td><Persona v-if="x.cobertura" :p="x.cobertura" :sub="x.cobertura.area" :t="28" /><span v-else class="muted">{{ x.coberturaNota || '—' }}</span></td>
                   <td><div class="acc"><button class="btn btn-primario btn-ch" :disabled="!x.puedeDecidir || ocupado" :title="x.puedeDecidir ? '' : 'Otro usuario de RH debe decidir este paso'" @click="aprobar(x)">Aprobar</button><button class="btn btn-rechazar btn-ch" :disabled="!x.puedeDecidir || ocupado" @click="rechazar(x)">Rechazar</button></div></td>
                 </tr>
                 <tr v-if="!porResolver.length"><td colspan="6" class="vacio">No hay solicitudes por resolver.</td></tr>
@@ -245,11 +245,11 @@ const otorgadosRef = (x: any) => Math.max(Number(x.otorgados) || 0, 1)
 
         <section class="tarjeta">
           <div class="tarjeta-cabecera"><h2 class="titulo-tarjeta">Próximos vencimientos</h2><button class="ver-todo" @click="irTab('politicas', { orden: 'fechaLimite' })">Ver todos</button></div>
-          <table class="tabla">
-            <thead><tr><th>Colaborador</th><th class="num">Días por vencer</th><th>Fecha límite</th></tr></thead>
+          <table class="tabla compacta-t">
+            <thead><tr><th>Colaborador</th><th class="num">Días</th><th>Fecha límite</th></tr></thead>
             <tbody>
               <tr v-for="v in vencimientos" :key="v.colaboradorId">
-                <td><Persona :p="v.colaborador" :sub="v.colaborador.area" :t="34" enlace /></td>
+                <td><Persona :p="v.colaborador" :sub="v.colaborador.area" :t="30" enlace /></td>
                 <td class="num">{{ num(v.diasPorVencer, 1) }} días</td>
                 <td><span class="nw">{{ fechaCorta(v.fechaLimite) }}</span><br><span v-if="v.alerta" class="etiqueta ambar">{{ textoVence(v.diasRestantes) }}</span></td>
               </tr>
@@ -418,7 +418,12 @@ const otorgadosRef = (x: any) => Math.max(Number(x.otorgados) || 0, 1)
 .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 .kpi-t { text-align: left; font: inherit; cursor: pointer; }
 .kpi-t:hover { box-shadow: var(--sombra-m); }
-.rejilla { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(320px, 1fr); gap: 20px; align-items: start; }
+.rejilla { display: grid; grid-template-columns: minmax(0, 2.15fr) minmax(330px, 1fr); gap: 20px; align-items: start; }
+.compacta-t { font-size: 13.5px; }
+.compacta-t th, .compacta-t td { padding: 9px 8px; }
+.compacta-t :deep(.persona .nombre) { font-size: 13.5px; }
+.compacta-t :deep(.persona .sub) { font-size: 12px; }
+.compacta-t .acc .btn-ch { height: 32px; padding: 0 12px; font-size: 13.5px; }
 .nw { white-space: nowrap; }
 .acc { display: flex; gap: 8px; }
 .bajo { color: var(--rojo-texto); font-weight: 700; }

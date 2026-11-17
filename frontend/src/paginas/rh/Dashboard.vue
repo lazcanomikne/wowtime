@@ -79,7 +79,7 @@ const docTexto = (d: any) => d.dias === 0 ? 'Vence hoy' : `Vence en ${d.dias} ${
     <div class="encabezado">
       <div>
         <h1 class="titulo-pagina">Resumen de hoy</h1>
-        <p class="subtitulo-pagina sub">{{ r?.subtitulo || s.frase('dashboard_subtitulo') }} <Icono n="hoja" :t="20" class="hoja" /></p>
+        <p class="subtitulo-pagina subt">{{ r?.subtitulo || s.frase('dashboard_subtitulo') }} <Icono n="hoja" :t="20" class="hoja" /></p>
       </div>
       <div v-if="s.frase('dashboard_banner')" class="banner">
         <Icono n="destellos" :t="38" :g="1.6" class="dest" />
@@ -201,7 +201,7 @@ const docTexto = (d: any) => d.dias === 0 ? 'Vence hoy' : `Vence en ${d.dias} ${
           <div class="cumples">
             <RouterLink v-for="c in cumples" :key="c.colaborador.id" :to="`/colaboradores/${c.colaborador.id}`" class="cumple">
               <div class="fila">
-                <Avatar :nombre="c.colaborador.nombre" :iniciales="c.colaborador.iniciales" :foto="c.colaborador.fotoUrl" :t="46" />
+                <Avatar :nombre="c.colaborador.nombre" :iniciales="c.colaborador.iniciales" :foto="c.colaborador.fotoUrl" :t="40" />
                 <div class="crecer">
                   <b>{{ c.colaborador.nombre }}</b>
                   <small>{{ c.colaborador.puesto }}</small>
@@ -238,8 +238,8 @@ const docTexto = (d: any) => d.dias === 0 ? 'Vence hoy' : `Vence en ${d.dias} ${
             <div class="tabla-envoltura">
               <table class="tabla compacta">
                 <thead><tr>
-                  <th class="ordenable sub" @click="ordenar('nombre')">Nombre</th>
-                  <th class="ordenable"><span class="sub" @click="ordenar('empresa')">Empresa</span> / Motivo</th>
+                  <th class="ordenable"><span class="subr" @click="ordenar('nombre')">Nombre</span></th>
+                  <th class="ordenable"><span class="subr" @click="ordenar('empresa')">Empresa</span> / Motivo</th>
                   <th>Entrada</th><th>Estado</th>
                 </tr></thead>
                 <tbody>
@@ -263,7 +263,7 @@ const docTexto = (d: any) => d.dias === 0 ? 'Vence hoy' : `Vence en ${d.dias} ${
 <style scoped>
 .dashboard { display: flex; flex-direction: column; gap: 20px; }
 .encabezado { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
-.sub { display: flex; align-items: center; gap: 8px; }
+.subt { display: flex; align-items: center; gap: 8px; }
 .hoja { color: #3fbf6f; }
 .banner { display: flex; align-items: center; gap: 18px; background: #dcf4f0; border-radius: 12px; padding: 18px 26px 18px 20px; min-width: 272px; }
 .banner p { font-size: 17px; color: #0b4d45; line-height: 1.35; font-weight: 500; max-width: 190px; }
@@ -282,6 +282,11 @@ const docTexto = (d: any) => d.dias === 0 ? 'Vence hoy' : `Vence en ${d.dias} ${
 .variacion.baja { color: var(--verde-texto); }
 .rejilla { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 9fr); gap: 20px; align-items: start; }
 .t-s { font-size: 19px; }
+.registros-t .tabla, .solicitudes-t .tabla { font-size: 13.5px; }
+.registros-t .tabla td, .registros-t .tabla th { padding: 8px 8px; }
+.registros-t :deep(.persona .nombre) { font-size: 13.5px; }
+.registros-t :deep(.persona .sub), .solicitudes-t :deep(.persona .sub) { font-size: 12px; }
+.registros-t :deep(.etiqueta) { font-size: 12px; padding: 0 10px; height: 24px; }
 .verde { color: var(--teal); }
 .rojo { color: #e5484d; }
 .gris { color: var(--texto-3); }
@@ -292,12 +297,12 @@ const docTexto = (d: any) => d.dias === 0 ? 'Vence hoy' : `Vence en ${d.dias} ${
 .acciones .btn-ch { height: 36px; padding: 0 22px; }
 .columna-der { display: flex; flex-direction: column; gap: 20px; }
 .cumples { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.cumple { border: 1px solid var(--gris-200); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 12px; color: inherit; text-decoration: none !important; }
+.cumple { border: 1px solid var(--gris-200); border-radius: 10px; padding: 12px 10px; display: flex; flex-direction: column; gap: 12px; color: inherit; text-decoration: none !important; }
 .cumple:hover { border-color: var(--gris-300); }
-.cumple b { display: block; font-size: 14.5px; color: var(--titulo); }
-.cumple small { display: block; color: var(--texto-3); font-size: 13px; }
+.cumple b { display: block; font-size: 13.5px; color: var(--titulo); line-height: 1.25; }
+.cumple small { display: block; color: var(--texto-3); font-size: 12px; line-height: 1.3; }
 .cumple .fecha { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--texto-2); margin-top: 6px; }
-.mensaje { display: flex; align-items: center; gap: 8px; justify-content: center; background: #e8f7ef; color: #0b6b44; border-radius: 8px; padding: 8px 6px; font-size: 13.5px; font-weight: 500; text-align: center; }
+.mensaje { display: flex; align-items: center; gap: 6px; justify-content: center; background: #e8f7ef; color: #0b6b44; border-radius: 8px; padding: 8px 6px; font-size: 12.5px; font-weight: 500; text-align: center; }
 .mensaje .icono { color: #e5484d; }
 .doble { display: grid; grid-template-columns: minmax(0, 0.79fr) minmax(0, 1fr); gap: 20px; }
 .doc { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--gris-100); color: inherit; text-decoration: none !important; }
@@ -306,8 +311,7 @@ const docTexto = (d: any) => d.dias === 0 ? 'Vence hoy' : `Vence en ${d.dias} ${
 .vence { display: flex; align-items: center; gap: 4px; color: #e23b3b; font-size: 12.5px; margin-top: 2px; }
 .compacta { font-size: 13px; }
 .compacta th, .compacta td { padding: 8px 8px; }
-.sub { text-decoration: underline; text-underline-offset: 2px; }
-th .sub { cursor: pointer; }
+.subr { text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 @media (max-width: 1350px) {
   .rejilla { grid-template-columns: 1fr; }
   .doble { grid-template-columns: 1fr 1fr; }

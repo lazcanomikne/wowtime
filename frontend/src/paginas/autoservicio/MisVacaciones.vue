@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import Icono from '@/componentes/Icono.vue'
 import Avatar from '@/componentes/Avatar.vue'
 import Calendario from '@/componentes/Calendario.vue'
+import CampoFecha from '@/componentes/CampoFecha.vue'
 import SelectorColaborador from '@/componentes/SelectorColaborador.vue'
 import { api } from '@/api'
 import { useSesion } from '@/stores/sesion'
@@ -118,11 +119,11 @@ const filaMia = (x: any) => ({ Aprobada: ['checkCirculo', 'ok', 'Vacaciones apro
             <div class="campos">
               <div class="campo">
                 <label for="fi">Fecha de inicio</label>
-                <div class="con-icono fecha-i"><Icono n="calendario" :t="20" /><input id="fi" type="date" class="entrada" :value="inicio ?? ''" :min="iso(new Date())" @change="cambiarInicio(($event.target as HTMLInputElement).value)" /></div>
+                <CampoFecha id="fi" :model-value="inicio" :min="iso(new Date())" @update:model-value="v => cambiarInicio(v ?? '')" />
               </div>
               <div class="campo">
                 <label for="ff">Fecha de término</label>
-                <div class="con-icono fecha-i"><Icono n="calendario" :t="20" /><input id="ff" type="date" class="entrada" :value="fin ?? inicio ?? ''" :min="inicio ?? iso(new Date())" @change="cambiarFin(($event.target as HTMLInputElement).value)" /></div>
+                <CampoFecha id="ff" :model-value="fin ?? inicio" :min="inicio ?? iso(new Date())" @update:model-value="v => cambiarFin(v ?? '')" />
               </div>
               <div class="campo">
                 <label>Días a utilizar</label>
@@ -218,8 +219,8 @@ const filaMia = (x: any) => ({ Aprobada: ['checkCirculo', 'ok', 'Vacaciones apro
 .badge { font-size: 15.5px; padding: 9px 14px; }
 .badge.mal { display: flex; gap: 8px; align-items: center; background: var(--rojo-claro); color: var(--rojo-texto); border-radius: 8px; font-weight: 600; }
 .fechas { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); gap: 34px; }
-.leyenda { display: flex; gap: 26px; margin: 16px 4px 12px; font-size: 13px; color: var(--texto-2); flex-wrap: wrap; }
-.leyenda span { display: flex; align-items: center; gap: 8px; }
+.leyenda { display: flex; gap: 18px; margin: 16px 4px 12px; font-size: 12.5px; color: var(--texto-2); flex-wrap: wrap; }
+.leyenda span { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
 .dot { width: 18px; height: 18px; border-radius: 50%; display: inline-block; }
 .dot.sel { background: var(--verde-osc); }
 .dot.fds { background: var(--gris-100); }

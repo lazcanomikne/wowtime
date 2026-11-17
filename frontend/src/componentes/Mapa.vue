@@ -11,6 +11,7 @@ const emit = defineEmits<{ mover: [lat: number, lng: number] }>()
 const el = ref<HTMLDivElement>()
 let mapa: L.Map | null = null
 let capa: L.LayerGroup | null = null
+let observador: ResizeObserver | null = null
 
 const pin = (tipo: string) => L.divIcon({
   className: 'pin-wt', iconSize: [34, 34], iconAnchor: [17, 17],
@@ -40,9 +41,13 @@ onMounted(() => {
   capa = L.layerGroup().addTo(mapa)
   if (props.editable) mapa.on('click', (e: L.LeafletMouseEvent) => emit('mover', e.latlng.lat, e.latlng.lng))
   dibujar()
+  // Dentro de modales el contenedor cambia de tamaño después de montarse
+  observador = new ResizeObserver(() => { mapa?.invalidateSize(); })
+  observador.observe(el.value!)
+  setTimeout(() => { mapa?.invalidateSize(); dibujar() }, 250)
 })
 watch(() => [props.centro, props.radio, props.posicion, props.dentro], dibujar, { deep: true })
-onBeforeUnmount(() => { mapa?.remove(); mapa = null })
+onBeforeUnmount(() => { observador?.disconnect(); mapa?.remove(); mapa = null })
 </script>
 
 <template>

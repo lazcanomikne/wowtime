@@ -137,7 +137,7 @@ public class MarcoController : ApiBase
         object solicitudes = Array.Empty<object>();
         if (Yo.Tiene(Permisos.VacacionesGestionar))
             solicitudes = (await Yo.Alcance(Db.Solicitudes.Include(s => s.Colaborador), s => s.SucursalId, sucursalId).Where(s => EF.Functions.ILike(s.Folio, patron)).Take(5).ToListAsync())
-                .Select(s => new { s.Id, s.Folio, Colaborador = s.Colaborador!.NombreCompleto, Tipo = Mapas.NombreTipoSolicitud(s.Tipo), s.Estado, enlace = $"/vacaciones/solicitudes/{s.Id}" }).ToList();
+                .Select(s => new { s.Id, s.Folio, Colaborador = s.Colaborador!.NombreCompleto, Tipo = Mapas.NombreTipoSolicitud(s.Tipo), s.Estado, enlace = $"/solicitudes/{s.Id}" }).ToList();
         object visitantes = Array.Empty<object>();
         if (Yo.Tiene(Permisos.VisitantesVer))
             visitantes = (await Yo.Alcance(Db.Invitaciones, i => i.SucursalId, sucursalId).Where(i => EF.Functions.ILike(EF.Functions.Unaccent(i.Nombre), EF.Functions.Unaccent(patron)))

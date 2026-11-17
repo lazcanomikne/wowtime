@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Organización y aprobaciones (Organigrama_Autorizaciones.png): organigrama, reglas, delegaciones y alerta de estructura.
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Icono from '@/componentes/Icono.vue'
 import Avatar from '@/componentes/Avatar.vue'
@@ -44,13 +44,16 @@ async function cargarOrg() {
   org.value = await api.get('/organigrama', { sucursalId: s.sucursalId ?? undefined })
   const ab = new Set<number>()
   const recorrer = (n: any, nivel: number) => {
-    if (nivel <= 1 || n.hijos.length <= 3) ab.add(n.id)
+    if (nivel === 0 || n.hijos.length <= 3) ab.add(n.id)
     n.hijos.forEach((h: any) => recorrer(h, nivel + 1))
   }
   org.value.raices.forEach((r: any) => recorrer(r, 0))
   abiertos.value = ab
+  centrar()
   if (route.query.sinSupervisor) modal.value = 'sinsup'
 }
+const lienzo = ref<HTMLElement>()
+function centrar() { nextTick(() => { const l = lienzo.value; if (l) l.scrollLeft = Math.max(0, (l.scrollWidth - l.clientWidth) / 2) }) }
 async function cargarReglas() { reglas.value = await api.get('/aprobaciones/reglas') }
 async function cargarDelegaciones() { delegaciones.value = (await api.get('/aprobaciones/delegaciones', { sucursalId: s.sucursalId ?? undefined, tamano: 50 })).items }
 async function todo() { await Promise.allSettled([cargarOrg(), cargarReglas(), cargarDelegaciones()]) }
@@ -63,7 +66,7 @@ function cerrar(e: MouseEvent) {
   if (!t.closest('.sel-suc')) selSuc.value = false
 }
 
-function alternar(id: number) { const n = new Set(abiertos.value); n.has(id) ? n.delete(id) : n.add(id); abiertos.value = n }
+function alternar(id: number) { const n = new Set(abiertos.value); n.has(id) ? n.delete(id) : n.add(id); abiertos.value = n; centrar() }
 const todosIds = computed(() => { const ids: number[] = []; const r = (n: any) => { if (n.hijos.length) ids.push(n.id); n.hijos.forEach(r) }; org.value?.raices.forEach(r); return ids })
 const todoAbierto = computed(() => todosIds.value.every(id => abiertos.value.has(id)))
 function expandirTodo() { abiertos.value = todoAbierto.value ? new Set(org.value.raices.map((r: any) => r.id)) : new Set(todosIds.value) }
@@ -154,7 +157,7 @@ const tiposTexto = (t: string[]) => t.map(x => TIPOS.find(y => y.v === x)?.t.toL
           </div>
         </div>
         <p v-if="editar" class="caja-info editando"><Icono n="info" :t="18" />Arrastra un colaborador sobre su nuevo jefe para cambiar la línea de reporte. Usa + para agregar a alguien a su cargo.</p>
-        <div class="lienzo">
+        <div ref="lienzo" class="lienzo">
           <ul v-if="org" class="arbol" :style="{ transform: `scale(${zoom / 100})` }">
             <OrgNodo v-for="r in org.raices" :key="r.id" :n="r" :nivel="0" :abiertos="abiertos" :editar="editar" :arrastrando="arrastrando"
                      @alternar="alternar" @abrir="id => router.push(`/colaboradores/${id}`)" @soltar="soltar" @arrastrar="id => (arrastrando = id)"
@@ -313,10 +316,11 @@ const tiposTexto = (t: string[]) => t.map(x => TIPOS.find(y => y.v === x)?.t.toL
 
 <style scoped>
 .org { display: flex; flex-direction: column; gap: 18px; }
-.encabezado { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
-.encabezado .titulo-pagina { font-size: 40px; }
-.acciones { gap: 14px; }
-.alto { height: 48px; font-size: 16.5px; padding: 0 18px; }
+.encabezado { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+@media (max-width: 1400px) { .encabezado { flex-wrap: wrap; } }
+.encabezado .titulo-pagina { font-size: 38px; white-space: nowrap; }
+.acciones { gap: 12px; flex-shrink: 0; }
+.alto { height: 46px; font-size: 16px; padding: 0 16px; }
 .sel-suc, .menu-wrap { position: relative; }
 .menu { position: absolute; top: calc(100% + 6px); left: 0; background: #fff; border: 1px solid var(--gris-200); border-radius: 12px; box-shadow: var(--sombra-m); padding: 6px; min-width: 200px; z-index: 40; }
 .menu.derecha { left: auto; right: 0; }
@@ -336,13 +340,14 @@ const tiposTexto = (t: string[]) => t.map(x => TIPOS.find(y => y.v === x)?.t.toL
 .arbol > :deep(li > .nodo::before) { display: none; }
 .col-der { display: flex; flex-direction: column; gap: 20px; }
 .reglas { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-.regla { display: grid; grid-template-columns: 34px 110px 1fr auto auto; align-items: center; gap: 12px; border: 1px solid var(--gris-200); border-radius: 10px; padding: 12px 12px 12px 14px; }
+.regla { display: grid; grid-template-columns: 30px 96px 1fr auto auto; align-items: center; gap: 10px; border: 1px solid var(--gris-200); border-radius: 10px; padding: 12px 12px 12px 14px; }
 .regla.inactiva { background: var(--gris-50); }
-.regla .nombre { font-size: 15px; color: var(--titulo); line-height: 1.2; }
-.pasos { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.paso { background: var(--gris-100); border-radius: 6px; padding: 9px 12px; font-size: 14px; color: var(--titulo); white-space: nowrap; }
+.regla .nombre { font-size: 14.5px; color: var(--titulo); line-height: 1.2; }
+.pasos { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+.paso { background: var(--gris-100); border-radius: 6px; padding: 8px 10px; font-size: 13.5px; color: var(--titulo); white-space: nowrap; }
 .fl { color: var(--texto-2); }
-.regla .etiqueta { height: 32px; padding: 0 14px; font-size: 14px; }
+.regla .etiqueta { height: 30px; padding: 0 12px; font-size: 13.5px; }
+@media (max-width: 1500px) { .pasos { flex-wrap: wrap; } }
 .azul { color: var(--azul); border-color: var(--gris-300); }
 .dele td { padding: 10px 8px; }
 .dele .p { gap: 6px; }

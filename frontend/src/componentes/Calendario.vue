@@ -75,7 +75,8 @@ function mover(n: number) { emit('update:mes', new Date(props.mes.getFullYear(),
 .dia.otro { color: var(--gris-300); background: var(--gris-50); }
 .dia.fest::after { content: ''; position: absolute; bottom: 5px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--naranja); }
 .dia.rango { background: var(--verde-claro); color: var(--titulo); font-weight: 600; }
-.dia.ext { background: var(--verde-osc); color: #fff; font-weight: 700; }
+.dia.ext, .dia.ext:hover { background: var(--verde-osc) !important; color: #fff; font-weight: 700; }
+.dia.rango:hover { background: #c8f0da !important; }
 .dia.hoy:not(.ext)::before { content: ''; position: absolute; inset: 2px; border: 1.5px solid var(--verde); border-radius: 7px; }
 .dia.bloq { color: var(--gris-300); cursor: not-allowed; }
 /* Variante móvil: días circulares como en App_Movil.png */

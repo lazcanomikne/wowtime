@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import Icono from '@/componentes/Icono.vue'
 import Avatar from '@/componentes/Avatar.vue'
 import Qr from '@/componentes/Qr.vue'
+import CampoFecha from '@/componentes/CampoFecha.vue'
 import EncabezadoMovil from '@/layout/EncabezadoMovil.vue'
 import { api, ErrorApi } from '@/api'
 import { useSesion } from '@/stores/sesion'
@@ -12,9 +13,10 @@ import { fechaMedia, hora, iso } from '@/utils/formato'
 
 const s = useSesion()
 const ui = useUi()
-const proxHora = () => { const d = new Date(); d.setMinutes(0, 0, 0); d.setHours(d.getHours() + 1); return `${String(d.getHours()).padStart(2, '0')}:00` }
+const proxHora = () => { const d = new Date(); d.setMinutes(Math.ceil((d.getMinutes() + 1) / 15) * 15, 0, 0); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` }
 const vacio = () => ({ nombre: '', empresaMotivo: '', telefono: '', correo: '', fecha: iso(new Date()), hora: proxHora() })
 const f = ref(vacio())
+const horas = Array.from({ length: 96 }, (_, k) => `${String(Math.floor(k / 4)).padStart(2, '0')}:${String((k % 4) * 15).padStart(2, '0')}`)
 const errores = ref<Record<string, string>>({})
 const generando = ref(false)
 const inv = ref<any>(null)
@@ -63,8 +65,10 @@ function otro() { inv.value = null; f.value = vacio() }
           <div class="campo"><label for="c">Correo (opcional)</label><input id="c" v-model="f.correo" class="entrada" type="email" placeholder="nombre@correo.com" /><span v-if="errores.correo" class="error-campo">{{ errores.correo }}</span></div>
         </div>
         <div class="dos">
-          <div class="campo"><label for="fe">Fecha de llegada</label><input id="fe" v-model="f.fecha" class="entrada" type="date" :min="iso(new Date())" /></div>
-          <div class="campo"><label for="ho">Hora</label><input id="ho" v-model="f.hora" class="entrada" type="time" step="300" /></div>
+          <div class="campo"><label for="fe">Fecha de llegada</label><CampoFecha id="fe" :model-value="f.fecha" :min="iso(new Date())" @update:model-value="v => (f.fecha = v ?? iso(new Date()))" /></div>
+          <div class="campo"><label for="ho">Hora</label>
+            <div class="con-icono"><Icono n="reloj" :t="18" /><select id="ho" v-model="f.hora" class="entrada"><option v-for="h in horas" :key="h" :value="h">{{ h }}</option></select></div>
+          </div>
         </div>
         <div class="anfitrion">
           <Avatar :nombre="s.me?.nombre" :iniciales="s.me?.colaborador?.iniciales" :foto="s.me?.colaborador?.fotoUrl" :t="40" />

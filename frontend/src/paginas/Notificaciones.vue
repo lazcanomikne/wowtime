@@ -34,7 +34,7 @@ function ir(p: number) { pagina.value = p; cargar() }
 /** Enlaces que el servidor genera con rutas antiguas. */
 const ruta = (e: string) => e
   .replace(/^\/vacaciones\/solicitudes\//, '/solicitudes/')
-  .replace(/^\/asistencia\/incidencias(\?|$)/, '/asistencia?pestana=incidencias&')
+  .replace(/^\/asistencia\/incidencias(\?|$)/, '/asistencia?tab=incidencias&')
   .replace(/[?&]$/, '')
 
 async function abrir(n: Notificacion) {

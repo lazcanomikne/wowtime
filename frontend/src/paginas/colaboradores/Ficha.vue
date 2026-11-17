@@ -296,6 +296,7 @@ function copiar(t: string) { navigator.clipboard?.writeText(t); ui.avisar('Copia
 .numero { display: inline-flex; align-items: center; height: 34px; padding: 0 16px; border: 1px solid var(--gris-300); border-radius: 8px; background: var(--gris-50); font-size: 15px; color: var(--texto-2); text-decoration: underline; text-underline-offset: 3px; }
 .estatus { height: 34px; padding: 0 16px; font-size: 15px; }
 .chips { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.chips .chip { height: 36px; padding: 0 13px; font-size: 14px; gap: 7px; }
 .chip .sol { color: #f5b301; }
 .lado { display: flex; flex-direction: column; gap: 22px; align-items: flex-end; }
 .editar { height: 44px; }
@@ -321,9 +322,9 @@ function copiar(t: string) { navigator.clipboard?.writeText(t); ui.avisar('Copia
 .tarjeta-cabecera .icono { color: var(--titulo); }
 .ver-todo .icono { color: var(--azul); }
 .esquema { margin: 0; display: flex; flex-direction: column; gap: 14px; }
-.esquema div { display: grid; grid-template-columns: 150px 1fr; align-items: center; }
-.esquema dt { display: flex; align-items: center; gap: 12px; color: var(--texto-2); font-size: 14.5px; }
-.esquema dd { margin: 0; color: var(--titulo); font-size: 15px; }
+.esquema div { display: grid; grid-template-columns: 168px 1fr; align-items: center; }
+.esquema dt { display: flex; align-items: center; gap: 12px; color: var(--texto-2); font-size: 14px; white-space: nowrap; }
+.esquema dd { margin: 0; color: var(--titulo); font-size: 14.5px; }
 .asig { background: #f0faf7; border-radius: 10px; padding: 14px; }
 .asig-ico { width: 54px; height: 54px; border-radius: 50%; background: #d8f3ea; color: #0c8e6c; display: grid; place-items: center; }
 .asig b { display: block; font-size: 17px; color: var(--titulo); }

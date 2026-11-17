@@ -223,7 +223,7 @@ public class Semilla(AppDb db, IReloj reloj, Almacen almacen, ServicioSaldos sal
                 Numero = numero ?? $"WC-{num++:D4}", Nombres = nombres, Apellidos = apellidos, PuestoId = P(puesto).Id,
                 AreaId = (suc == mty ? areas : areasSlt).FirstOrDefault(a => a.Nombre == area)?.Id ?? (suc == mty ? A("Operaciones").Id : areasSlt[0].Id),
                 SucursalId = suc.Id, TurnoId = turno.Id, Supervisor = sup, EquipoId = eq?.Id,
-                FechaIngreso = ingreso ?? hoy.AddDays(-rnd.Next(400, 3600)),
+                FechaIngreso = SinAniversarioHoy(ingreso ?? hoy.AddDays(-rnd.Next(400, 3600))),
                 FechaNacimiento = nacimiento ?? new DateOnly(rnd.Next(1970, 2003), rnd.Next(1, 13), rnd.Next(1, 28)),
                 Genero = genero == 'F' ? "Femenino" : "Masculino",
                 Email = $"{Simple(nombres)}.{Simple(apellidos.Split(' ')[0])}@wowtime.mx",
@@ -374,7 +374,10 @@ public class Semilla(AppDb db, IReloj reloj, Almacen almacen, ServicioSaldos sal
         db.Delegaciones.Add(new Delegacion { DeColaboradorId = carlosM.Id, HaciaColaboradorId = mariana.Id, FechaInicio = hoy.AddDays(-2), FechaFin = hoy.AddDays(2), Tipos = [TipoSolicitud.Vacaciones, TipoSolicitud.Permiso], CreadoPor = uCarlos.Id });
         await db.SaveChangesAsync();
 
-        await Asistencia(todos, mty, acceso, ana);
+        // Usuarios de los mockups con acceso: registro desde app y terminal permitido
+        foreach (var c in named.Take(4)) { c.Esquema!.RegistroPermitido = MetodoRegistro.TerminalYApp; c.Esquema.RequiereFoto = false; }
+        await db.SaveChangesAsync();
+        await Asistencia(todos, mty, acceso, ana, named[3]);
         await SolicitudesDemo(todos, named, ana, sofia, jorge, diego, andrea, mariana, carlosM, uMariana, uCarlos, uAna, uDaniel, eqNorte, ricardo);
         await VisitantesDemo(mty, ana, mariana, recep, recepcionQr);
         await DocumentosDemo(todos, ana, named, jorge);
@@ -389,9 +392,12 @@ public class Semilla(AppDb db, IReloj reloj, Almacen almacen, ServicioSaldos sal
         log.LogInformation("Semilla cargada: {N} colaboradores.", todos.Count);
     }
 
+    /// <summary>Evita aniversarios justo el día de carga (el periodo anterior vencería hoy y se verían dos saldos).</summary>
+    private DateOnly SinAniversarioHoy(DateOnly d) => d.Month == hoy.Month && Math.Abs(d.Day - hoy.Day) <= 2 ? d.AddDays(-41) : d;
+
     private static string Simple(string s) => s.Normalizar().Replace(" ", "").Replace("ñ", "n");
 
-    private async Task Asistencia(List<Colaborador> todos, Sucursal mty, Dispositivo acceso, Colaborador ana)
+    private async Task Asistencia(List<Colaborador> todos, Sucursal mty, Dispositivo acceso, Colaborador ana, Colaborador sinRegistroHoy)
     {
         var turnos = await db.Turnos.ToDictionaryAsync(t => t.Id);
         var festivos = (await db.DiasFestivos.Select(f => f.Fecha).ToListAsync()).ToHashSet();
@@ -414,7 +420,7 @@ public class Semilla(AppDb db, IReloj reloj, Almacen almacen, ServicioSaldos sal
                     incs.Add(new IncidenciaAsistencia { ColaboradorId = c.Id, SucursalId = c.SucursalId, Fecha = d, Tipo = TipoIncidencia.Falta, Detalle = "Sin registro de entrada en la jornada.", Estado = d >= hoy.AddDays(-4) ? EstadoIncidencia.PorRevisar : EstadoIncidencia.Confirmada });
                     continue;
                 }
-                if (esHoy && r < 0.12) continue; // aún no llega
+                if (esHoy && (r < 0.12 || c.Id == sinRegistroHoy.Id)) continue; // aún no llega (María Fernández registra en la demostración)
                 var retardo = r > 0.93;
                 var minutos = retardo ? rnd.Next(12, 40) : -rnd.Next(1, 25);
                 if (c.Id == ana.Id) minutos = -58;
