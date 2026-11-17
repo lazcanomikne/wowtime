@@ -1,5 +1,6 @@
 // Cliente de la API pública /api/v1. El front no tiene rutas privilegiadas: todo pasa por aquí.
-export const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5080').replace(/\/$/, '')
+// Vacío = mismo origen (en local, Vite reenvía /api a la API). En Vercel apunta a la API publicada.
+export const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 const BASE = `${API_URL}/api/v1`
 
 export class ErrorApi extends Error {
@@ -59,7 +60,7 @@ async function solicitud<T>(metodo: string, ruta: string, cuerpo?: unknown, opci
   try {
     r = await fetch(`${BASE}${ruta}`, { method: metodo, headers, body })
   } catch {
-    throw new ErrorApi(0, 'sin_conexion', 'Sin conexión. Revisa tu internet e intenta de nuevo.')
+    throw new ErrorApi(0, 'sin_conexion', 'No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.')
   }
   if (r.status === 401 && opciones.reintento !== false && t?.renovacion && !ruta.startsWith('/auth/')) {
     if (await renovar()) return solicitud<T>(metodo, ruta, cuerpo, { ...opciones, reintento: false })

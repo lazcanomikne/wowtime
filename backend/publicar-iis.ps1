@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Publica la API de WOW! Time en IIS (hosting in-process con ASP.NET Core Module V2).
   Solo crea o toca el grupo de aplicaciones y el sitio de WOW! Time; no modifica otros sitios.

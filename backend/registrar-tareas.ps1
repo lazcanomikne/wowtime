@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Registra en el Programador de tareas de Windows:
    1) WOW! Time - Tareas: llama cada hora a POST /api/v1/tareas/ejecutar con una llave de API (no depende de que IIS esté despierto).

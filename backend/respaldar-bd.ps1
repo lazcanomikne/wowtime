@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Respaldo de la base de WOW! Time con pg_dump (formato personalizado, comprimido). Conserva los últimos N días.
   Lee la cadena de conexión de backend\WowTime.Api\.env (o de -Env).

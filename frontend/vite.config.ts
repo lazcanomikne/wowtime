@@ -3,6 +3,9 @@ import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
 
+// API a la que se reenvía /api en el servidor de desarrollo (y en vite preview)
+const apiLocal = process.env.API_LOCAL || 'http://localhost:5080'
+
 export default defineConfig({
   plugins: [
     vue(),
@@ -53,5 +56,7 @@ export default defineConfig({
     })
   ],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
-  server: { port: 5173, host: true }
+  // En local el front reenvía /api a la API: funciona desde cualquier equipo de la red y en cualquier puerto, sin CORS.
+  server: { port: 5173, host: true, proxy: { '/api': { target: apiLocal, changeOrigin: true } } },
+  preview: { host: true, proxy: { '/api': { target: apiLocal, changeOrigin: true } } }
 })

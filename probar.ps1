@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Corre todas las pruebas: reglas de negocio y API (xUnit) y recorridos de punta a punta en navegador (Playwright).
   Usa la base de pruebas (ConnectionStrings__Pruebas del .env), que se borra y recarga; no toca los datos de desarrollo.

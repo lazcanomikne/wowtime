@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Levanta WOW! Time en local: API (http://localhost:5080) y front (http://localhost:5173).
 .PARAMETER Semilla
@@ -15,6 +15,16 @@ $front = Join-Path $raiz 'frontend'
 
 if (-not (Test-Path (Join-Path $api '.env'))) {
   Write-Host "Falta backend\WowTime.Api\.env. Copia .env.example como .env y llena la cadena de conexión y Jwt__Clave." -ForegroundColor Red
+  exit 1
+}
+# Si otra copia ya ocupa los puertos, la API nueva no arrancaría y Vite se movería de puerto en silencio
+$ocupados = Get-NetTCPConnection -State Listen -LocalPort 5080, 5173 -ErrorAction SilentlyContinue
+if ($ocupados) {
+  foreach ($c in ($ocupados | Sort-Object LocalPort -Unique)) {
+    $p = Get-Process -Id $c.OwningProcess -ErrorAction SilentlyContinue
+    Write-Host "El puerto $($c.LocalPort) ya está en uso por $($p.ProcessName) (PID $($c.OwningProcess))." -ForegroundColor Red
+  }
+  Write-Host "WOW! Time probablemente ya está corriendo: abre http://localhost:5173. Para reiniciarlo, cierra esos procesos (Stop-Process -Id <PID>) y vuelve a ejecutar este script." -ForegroundColor Yellow
   exit 1
 }
 if (-not (Test-Path (Join-Path $front '.env.local'))) { Copy-Item (Join-Path $front '.env.example') (Join-Path $front '.env.local') }

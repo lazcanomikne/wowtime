@@ -37,8 +37,10 @@ Además: modo quiosco de asistencia (`/quiosco`), control de acceso de visitante
    .\iniciar.ps1 -Semilla
    ```
 
-   - Front: http://localhost:5173
+   - Front: http://localhost:5173 (desde otro equipo de la red: `http://<IP-del-servidor>:5173`)
    - API: http://localhost:5080 · documentación interactiva: http://localhost:5080/api/docs
+
+   El front reenvía `/api` a la API (proxy de Vite), así que el inicio de sesión funciona igual desde el servidor o desde otro equipo, sin configurar CORS. Si el puerto 5080 o 5173 ya está ocupado, `iniciar.ps1` lo avisa y se detiene: el sistema probablemente ya está corriendo.
 
    Las siguientes veces basta `.\iniciar.ps1`. Las migraciones se aplican solas al arrancar la API.
 
