@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="WowTime.Api/WowTime.Api.csproj" />
+  <Project Path="WowTime.Tests/WowTime.Tests.csproj" />
+</Solution>
