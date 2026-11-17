@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using WowTime.Api.Domain;
 
@@ -95,5 +95,5 @@ public static class Reglas
         return CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(FirmarQr(partes[1], secreto)), Encoding.UTF8.GetBytes(firma)) ? partes[1] : null;
     }
 
-    public static decimal PorcentajeCobertura(int miembros, int ausentes) => miembros == 0 ? 100 : Math.Round((miembros - ausentes) * 100m / miembros, 0);
+    public static decimal PorcentajeCobertura(int miembros, int ausentes) => miembros == 0 ? 100 : Math.Round((miembros - ausentes) * 100m / miembros, 0, MidpointRounding.AwayFromZero);
 }

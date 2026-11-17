@@ -353,7 +353,7 @@ public class Semilla(AppDb db, IReloj reloj, Almacen almacen, ServicioSaldos sal
         var saldosTodos = await db.Saldos.ToListAsync();
         foreach (var s in saldosTodos)
         {
-            var usados = rnd.Next(0, 14);
+            var usados = s.FechaLimite <= hoy.AddDays(60) ? (int)s.DiasOtorgados - rnd.Next(0, 4) : rnd.Next(0, 14);
             s.DiasUsados = Math.Min(usados, s.DiasOtorgados);
             if (s.DiasUsados > 0)
                 db.MovimientosSaldo.Add(new MovimientoSaldo { SaldoVacacionesId = s.Id, ColaboradorId = s.ColaboradorId, Tipo = TipoMovimientoSaldo.Consumo, Dias = s.DiasUsados, Fecha = reloj.Ahora, Motivo = "Vacaciones tomadas antes del arranque del sistema" });
@@ -411,7 +411,7 @@ public class Semilla(AppDb db, IReloj reloj, Almacen almacen, ServicioSaldos sal
                 if (c.Id == ana.Id) r = 0.5;
                 if (!esHoy && r < 0.03)
                 {
-                    incs.Add(new IncidenciaAsistencia { ColaboradorId = c.Id, SucursalId = c.SucursalId, Fecha = d, Tipo = TipoIncidencia.Falta, Detalle = "Sin registro de entrada en la jornada.", Estado = d >= hoy.AddDays(-1) ? EstadoIncidencia.PorRevisar : EstadoIncidencia.Confirmada });
+                    incs.Add(new IncidenciaAsistencia { ColaboradorId = c.Id, SucursalId = c.SucursalId, Fecha = d, Tipo = TipoIncidencia.Falta, Detalle = "Sin registro de entrada en la jornada.", Estado = d >= hoy.AddDays(-4) ? EstadoIncidencia.PorRevisar : EstadoIncidencia.Confirmada });
                     continue;
                 }
                 if (esHoy && r < 0.12) continue; // aún no llega
@@ -436,7 +436,7 @@ public class Semilla(AppDb db, IReloj reloj, Almacen almacen, ServicioSaldos sal
                 };
                 regs.Add(e);
                 if (e.Estado == EstadoRegistro.Retardo)
-                    incs.Add(new IncidenciaAsistencia { ColaboradorId = c.Id, SucursalId = c.SucursalId, Fecha = d, Tipo = TipoIncidencia.Retardo, Detalle = $"Entrada a las {horaE:HH\\:mm}; horario {t.HoraEntrada:HH\\:mm} con {t.ToleranciaMinutos} min de tolerancia.", Estado = d >= hoy.AddDays(-1) ? EstadoIncidencia.PorRevisar : EstadoIncidencia.Justificada });
+                    incs.Add(new IncidenciaAsistencia { ColaboradorId = c.Id, SucursalId = c.SucursalId, Fecha = d, Tipo = TipoIncidencia.Retardo, Detalle = $"Entrada a las {horaE:HH\\:mm}; horario {t.HoraEntrada:HH\\:mm} con {t.ToleranciaMinutos} min de tolerancia.", Estado = d >= hoy.AddDays(-4) ? EstadoIncidencia.PorRevisar : EstadoIncidencia.Justificada });
                 var horaS = t.HoraSalida.AddMinutes(rnd.Next(0, 25));
                 var dtS = d.ToDateTime(horaS);
                 if (!esHoy && rnd.NextDouble() < 0.01)

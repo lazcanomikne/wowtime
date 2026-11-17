@@ -102,7 +102,12 @@ public class AsistenciaController : ApiBase
         if (f.Desde is DateOnly de) q = q.Where(r => r.FechaLocal >= de);
         if (f.Hasta is DateOnly ha) q = q.Where(r => r.FechaLocal <= ha);
         if (f.Tipo is TipoRegistro t) q = q.Where(r => r.Tipo == t);
-        if (f.Estado is EstadoRegistro es) q = q.Where(r => r.Estado == es);
+        if (f.Estado is EstadoRegistro es)
+        {
+            if (!f.Agrupado) q = q.Where(r => r.Estado == es);
+            else if (es == EstadoRegistro.SalidaRegistrada) q = q.Where(r => r.Tipo != TipoRegistro.Entrada || Db.Registros.Any(x => x.ColaboradorId == r.ColaboradorId && x.FechaLocal == r.FechaLocal && x.Tipo == TipoRegistro.Salida));
+            else q = q.Where(r => r.Tipo != TipoRegistro.Entrada || (r.Estado == es && !Db.Registros.Any(x => x.ColaboradorId == r.ColaboradorId && x.FechaLocal == r.FechaLocal && x.Tipo == TipoRegistro.Salida)));
+        }
         if (f.Origen is OrigenRegistro o) q = q.Where(r => r.Origen == o);
         if (f.FueraDeArea == true) q = q.Where(r => r.DentroGeocerca == false);
         if (!f.Agrupado)

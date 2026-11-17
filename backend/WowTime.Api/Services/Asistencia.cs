@@ -165,7 +165,7 @@ public class ServicioAsistencia(AppDb db, IReloj reloj, Parametros parametros, B
         await db.SaveChangesAsync();
         if (c.SupervisorId is int sup)
             await notif.EnviarAColaborador(sup, "incidencia", $"Incidencia por revisar: {c.Nombres} {c.Apellidos}",
-                $"{Mapas.NombreIncidencia(tipo)} · {fecha:dd/MM/yyyy}", $"/asistencia/incidencias?id={inc.Id}", $"inc:{inc.Id}");
+                $"{Mapas.NombreIncidencia(tipo)} · {fecha:dd/MM/yyyy}", $"/asistencia?tab=incidencias&id={inc.Id}", $"inc:{inc.Id}");
         eventos.PublicarSucursal(c.SucursalId, "incidencia", new { inc.Id });
         return inc;
     }

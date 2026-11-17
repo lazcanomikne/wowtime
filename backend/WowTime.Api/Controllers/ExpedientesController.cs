@@ -169,7 +169,7 @@ public class ExpedientesController : ApiBase
         var totalReq = lista.Sum(x => x.Requeridos); var totalEnt = lista.Sum(x => x.Entregados);
         return new
         {
-            Items = lista.Skip((pag - 1) * tam).Take(tam), Total = lista.Count, PaginaActual = pag, Tamano = tam,
+            Items = lista.Skip((pag - 1) * tam).Take(tam), Total = lista.Count, PaginaActual = pag, Tamano = tam, Paginas = (int)Math.Ceiling(lista.Count / (double)tam),
             Resumen = new { Colaboradores = lista.Count, Completos = lista.Count(x => x.Entregados >= x.Requeridos), Porcentaje = totalReq == 0 ? 100 : (int)Math.Round(totalEnt * 100.0 / totalReq),
                 Vencidos = lista.Sum(x => x.Vencidos), Urgentes = lista.Sum(x => x.Urgentes), Proximos = lista.Sum(x => x.Proximos) }
         };
