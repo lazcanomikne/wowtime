@@ -11,7 +11,7 @@ import { api } from '@/api'
 import { useSesion } from '@/stores/sesion'
 import { useUi } from '@/stores/ui'
 import { useEventos } from '@/utils/usos'
-import { fechaMedia, hora, iso, num } from '@/utils/formato'
+import { fechaMedia, hora, iso, num, rango } from '@/utils/formato'
 
 const s = useSesion()
 const ui = useUi()
@@ -153,9 +153,9 @@ const docTexto = (d: any) => d.dias === 0 ? 'Vence hoy' : `Vence en ${d.dias} ${
             <thead><tr><th>Colaborador</th><th>Tipo</th><th>Fechas</th><th>Acciones</th></tr></thead>
             <tbody>
               <tr v-for="x in solicitudes" :key="x.id" data-prueba="fila-solicitud">
-                <td><Persona :p="x.colaborador" :t="40" enlace /></td>
+                <td><Persona :p="x.colaborador" :t="36" enlace /></td>
                 <td><span class="tipo"><Icono :n="x.tipo === 'Vacaciones' ? 'palmera' : 'calendario'" :t="22" :class="x.tipo === 'Vacaciones' ? 'verde' : 'gris'" />{{ x.tipoTexto }}</span></td>
-                <td class="fechas">{{ x.periodo.replace(/ de \d{4}$/, '') }}<br><span>({{ num(x.diasHabiles) }} {{ x.diasHabiles == 1 ? 'día' : 'días' }})</span></td>
+                <td class="fechas">{{ rango(x.fechaInicio, x.fechaFin, true) }}<br><span>({{ num(x.diasHabiles) }} {{ x.diasHabiles == 1 ? 'día' : 'días' }})</span></td>
                 <td>
                   <div class="acciones">
                     <button class="btn btn-primario btn-ch" :disabled="ocupado === x.id" @click="aprobar(x)">Aprobar</button>
@@ -180,7 +180,7 @@ const docTexto = (d: any) => d.dias === 0 ? 'Vence hoy' : `Vence en ${d.dias} ${
             <thead><tr><th>Colaborador</th><th>Entrada</th><th>Salida</th><th>Estado</th></tr></thead>
             <tbody>
               <tr v-for="x in registros" :key="x.id" class="clic" @click="router.push(`/colaboradores/${x.colaborador.id}?tab=asistencia`)">
-                <td><Persona :p="x.colaborador" :t="40" /></td>
+                <td><Persona :p="x.colaborador" :t="34" /></td>
                 <td>{{ hora(x.entrada) || '—' }}</td>
                 <td>{{ hora(x.salida) || '—' }}</td>
                 <td><Estado :v="x.estado" /></td>
@@ -261,7 +261,12 @@ const docTexto = (d: any) => d.dias === 0 ? 'Vence hoy' : `Vence en ${d.dias} ${
 </template>
 
 <style scoped>
-.dashboard { display: flex; flex-direction: column; gap: 20px; }
+.dashboard { display: flex; flex-direction: column; gap: 18px; }
+.dashboard .tarjeta { padding: 16px 20px; }
+.dashboard .tarjeta-cabecera { margin-bottom: 10px; }
+.dashboard :deep(.grafica svg) { height: 172px; }
+.solicitudes-t .tabla td, .solicitudes-t .tabla th { padding: 7px 8px; }
+.registros-t .tabla td { padding: 5px 8px !important; }
 .encabezado { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
 .subt { display: flex; align-items: center; gap: 8px; }
 .hoja { color: #3fbf6f; }
@@ -269,11 +274,11 @@ const docTexto = (d: any) => d.dias === 0 ? 'Vence hoy' : `Vence en ${d.dias} ${
 .banner p { font-size: 17px; color: #0b4d45; line-height: 1.35; font-weight: 500; max-width: 190px; }
 .dest { color: #0c9b78; }
 .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-.kpi-t { color: inherit; text-decoration: none !important; transition: box-shadow .15s, border-color .15s; padding: 18px 20px 20px; }
+.kpi-t { color: inherit; text-decoration: none !important; transition: box-shadow .15s, border-color .15s; padding: 16px 18px 16px !important; }
 .kpi-t:hover { border-color: var(--gris-300); box-shadow: var(--sombra-m); }
 .barra-pct { display: flex; align-items: center; gap: 14px; margin-top: 10px; font-size: 14px; color: var(--texto-2); }
 .barra-pct .barra { flex: 1; max-width: 148px; }
-.kpi-valor { margin-top: 6px; display: flex; align-items: baseline; }
+.kpi-valor { margin-top: 4px; display: flex; align-items: baseline; }
 .kpi-nota { font-size: 14px; color: var(--texto-2); margin-top: 4px; }
 .reloj-lleno { width: 36px; height: 36px; border-radius: 50%; background: #11937a; color: #fff; display: grid; place-items: center; }
 .alerta-llena { width: 40px; height: 40px; border-radius: 50%; background: #f26913; color: #fff; display: grid; place-items: center; padding-bottom: 2px; }
@@ -290,22 +295,31 @@ const docTexto = (d: any) => d.dias === 0 ? 'Vence hoy' : `Vence en ${d.dias} ${
 .verde { color: var(--teal); }
 .rojo { color: #e5484d; }
 .gris { color: var(--texto-3); }
-.tipo { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.tipo { display: inline-flex; align-items: center; gap: 6px; }
 .fechas { white-space: nowrap; }
 .fechas span { color: var(--texto-2); }
 .acciones { display: flex; gap: 10px; }
-.acciones .btn-ch { height: 36px; padding: 0 22px; }
+.acciones { gap: 8px; }
+.acciones .btn-ch { height: 32px; padding: 0 11px; font-size: 13.5px; }
+.tipo { white-space: normal !important; }
+.solicitudes-t :deep(.persona .textos > *) { white-space: normal; }
 .columna-der { display: flex; flex-direction: column; gap: 20px; }
 .cumples { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.cumple { border: 1px solid var(--gris-200); border-radius: 10px; padding: 12px 10px; display: flex; flex-direction: column; gap: 12px; color: inherit; text-decoration: none !important; }
+.cumple { border: 1px solid var(--gris-200); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 8px; color: inherit; text-decoration: none !important; }
 .cumple:hover { border-color: var(--gris-300); }
 .cumple b { display: block; font-size: 13.5px; color: var(--titulo); line-height: 1.25; }
 .cumple small { display: block; color: var(--texto-3); font-size: 12px; line-height: 1.3; }
 .cumple .fecha { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--texto-2); margin-top: 6px; }
 .mensaje { display: flex; align-items: center; gap: 6px; justify-content: center; background: #e8f7ef; color: #0b6b44; border-radius: 8px; padding: 8px 6px; font-size: 12.5px; font-weight: 500; text-align: center; }
 .mensaje .icono { color: #e5484d; }
-.doble { display: grid; grid-template-columns: minmax(0, 0.79fr) minmax(0, 1fr); gap: 20px; }
-.doc { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--gris-100); color: inherit; text-decoration: none !important; }
+.doble { display: grid; grid-template-columns: minmax(0, 0.79fr) minmax(0, 1fr); gap: 18px; }
+.doble .t-s { font-size: 16.5px; white-space: nowrap; }
+.doble .tarjeta { padding: 16px 14px; }
+.doble .ver-todo { font-size: 13.5px; }
+.compacta { font-size: 12.5px !important; }
+.compacta th, .compacta td { padding: 6px 5px !important; }
+.compacta :deep(.etiqueta) { font-size: 11.5px; height: 22px; padding: 0 8px; }
+.doc { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--gris-100); color: inherit; text-decoration: none !important; }
 .doc:last-of-type { border-bottom: 0; }
 .doc b { display: block; font-size: 13.5px; font-weight: 600; color: var(--titulo); }
 .vence { display: flex; align-items: center; gap: 4px; color: #e23b3b; font-size: 12.5px; margin-top: 2px; }

@@ -7,7 +7,7 @@ import Icono from '@/componentes/Icono.vue'
 const props = defineProps<{ n: any; nivel: number; abiertos: Set<number>; editar: boolean; arrastrando: number | null }>()
 const emit = defineEmits<{ alternar: [id: number]; abrir: [id: number]; soltar: [id: number, nuevoJefe: number]; arrastrar: [id: number | null]; agregar: [id: number] }>()
 const abierto = computed(() => props.abiertos.has(props.n.id))
-const compacto = computed(() => props.nivel >= 3)
+const compacto = computed(() => props.nivel >= 2)
 function soltar(e: DragEvent) {
   e.preventDefault()
   const id = Number(e.dataTransfer?.getData('text/plain'))
@@ -43,7 +43,7 @@ function soltar(e: DragEvent) {
 </template>
 
 <style scoped>
-li { list-style: none; position: relative; padding: 26px 6px 0; display: flex; flex-direction: column; align-items: center; }
+li { list-style: none; position: relative; padding: 26px 5px 0; display: flex; flex-direction: column; align-items: center; }
 /* Conectores del organigrama */
 li::before, li::after { content: ''; position: absolute; top: 0; right: 50%; width: 50%; height: 26px; border-top: 2px solid #b9c2cf; }
 li::after { right: auto; left: 50%; border-left: 2px solid #b9c2cf; }
@@ -55,7 +55,7 @@ li:last-child::before { border-right: 2px solid #b9c2cf; border-radius: 0 8px 0 
 li:first-child::after { border-radius: 8px 0 0 0; }
 ul { padding: 26px 0 0; margin: 0; display: flex; justify-content: center; position: relative; }
 ul::before { content: ''; position: absolute; top: 0; left: 50%; height: 26px; border-left: 2px solid #b9c2cf; }
-.nodo { position: relative; display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid var(--gris-200); border-radius: 10px; padding: 12px 18px 12px 12px; min-width: 250px; cursor: pointer; box-shadow: var(--sombra); transition: border-color .15s, box-shadow .15s; }
+.nodo { position: relative; display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--gris-200); border-radius: 10px; padding: 12px 16px 12px 12px; min-width: 230px; cursor: pointer; box-shadow: var(--sombra); transition: border-color .15s, box-shadow .15s; }
 .nodo:hover { border-color: var(--gris-300); box-shadow: var(--sombra-m); }
 .nodo.raiz { background: #eefcf5; border-color: #9fe0bd; padding: 14px 22px 14px 14px; }
 .nodo.compacto { flex-direction: row; min-width: 0; width: 190px; padding: 10px; gap: 10px; }

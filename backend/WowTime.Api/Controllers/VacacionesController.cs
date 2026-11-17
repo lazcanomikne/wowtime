@@ -79,7 +79,7 @@ public class VacacionesController : ApiBase
             .Select(s => s.ColaboradorId).Distinct().CountAsync();
         var alerta = await Svc<Parametros>().Entero(Parametros.AlertaVencimiento, 30);
         var limite = hoy.AddDays(alerta);
-        var porVencer = await Db.Saldos.Where(s => ids.Contains(s.ColaboradorId) && s.FechaLimite >= hoy && s.FechaLimite <= limite)
+        var porVencer = await Db.Saldos.Where(s => ids.Contains(s.ColaboradorId) && s.FechaLimite >= hoy && s.FechaLimite <= limite && s.DiasOtorgados - s.DiasUsados - s.DiasComprometidos - s.DiasVencidos > 0)
             .SumAsync(s => s.DiasOtorgados - s.DiasUsados - s.DiasComprometidos - s.DiasVencidos);
         var cobertura = await CoberturaDia(ids, hoy);
         return new { SolicitudesPendientes = pendientes, VacacionesHoy = deVacaciones, DiasPorVencer = Math.Max(0, porVencer), Cobertura = cobertura, Mes = ini };

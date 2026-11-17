@@ -598,7 +598,7 @@ public class ColaboradoresController : ApiBase
             c.Id, c.Numero, Nombre = c.NombreCompleto, Puesto = c.Puesto?.Nombre, Area = c.Area?.Nombre, Iniciales = Mapas.Iniciales(c.Nombres, c.Apellidos),
             FotoUrl = Enlaces.Archivo(c.FotoArchivoId), ReportesDirectos = hijos[c.Id].Count(), c.SupervisorId,
             SupervisorExterno = c.SupervisorId is int s && !ids.Contains(s) ? c.Supervisor?.NombreCompleto : null,
-            Hijos = hijos[c.Id].OrderBy(h => h.Puesto?.Nivel ?? 9).ThenByDescending(h => hijos[h.Id].Count()).ThenBy(h => h.Nombres).Select(Nodo).ToList()
+            Hijos = hijos[c.Id].OrderBy(h => h.Puesto?.Nivel ?? 9).ThenBy(h => hijos[h.Id].Count()).ThenBy(h => h.Nombres).Select(Nodo).ToList()
         };
         var raices = cols.Where(c => c.SupervisorId is null ? raicesNivel.Contains(c.PuestoId ?? 0) : !ids.Contains(c.SupervisorId.Value)).OrderBy(c => c.Puesto?.Nivel ?? 9).ToList();
         var sinSupervisor = cols.Where(c => c.SupervisorId is null && !raicesNivel.Contains(c.PuestoId ?? 0)).Select(Mapas.Persona).ToList();

@@ -1,0 +1,17 @@
+# Comparación de capturas contra mockups
+
+Capturas generadas con `npx playwright test --config playwright.capturas.config.ts` (1536×1024 en escritorio y 390×844 en teléfono, datos de demostración y hora simulada de las 12:15).
+
+| Pantalla | Mockup | Captura | Coincide en | Diferencias justificadas |
+| --- | --- | --- | --- | --- |
+| Resumen de hoy | `Dashboard.png` | `Dashboard.png` | Distribución de 4 indicadores y 6 paneles, colores, textos, tablas, gráfica con globo, cumpleaños con mensajes | "Presentes hoy" en lugar de "Colaboradores activos" (decisión 20); logo sin ícono de reloj y menú azul marino con activo verde (decisión 25); los números salen de la base |
+| Ficha de colaborador | `Ficha_colaborador.png` | `Ficha_colaborador.png` | Encabezado, etiquetas, 7 pestañas y las 7 tarjetas del Resumen | Fotos sustituidas por iniciales; la asignación es "Remodelación del área de supervisión" (inconsistencia 4) |
+| Vacaciones RH | `Portal_Autorizar_Vacaciones.png` (no recibida) | `Portal_Autorizar_Vacaciones.png` | Construida con la descripción de `ARQUITECTURA.md` §7: filtros, 4 pestañas, indicadores, solicitudes por resolver, calendario de equipo, saldos y vencimientos | El calendario es línea de tiempo por colaborador (decisión 23) |
+| Organización y aprobaciones | `Organigrama_Autorizaciones.png` | `Organigrama_Autorizaciones.png` | Encabezado, pestañas, árbol, reglas con pasos y estado, delegación de Carlos Méndez a Mariana Torres, alerta de 2 colaboradores sin supervisor | Con unos 160 colaboradores, Carlos Méndez tiene 5 reportes directos y Mariana Torres 2; el zoom se ajusta solo para que el árbol quepa |
+| Solicitar vacaciones (web) | `Solicitud_de_Vacaciones.png` | `Solicitud_de_Vacaciones.png` | Saldo, calendario, fechas, días a utilizar, cobertura, comentario, resumen, ruta y mis solicitudes | Semana de lunes con L M X J V S D (decisión 24); la ruta de Ana Lucía es Carlos Méndez (delegado a Mariana) → RH (decisión 5); cobertura con selector de colaborador (decisión 19); el menú de una supervisora incluye Aprobaciones, Mi equipo y Reportes |
+| App: Inicio | `App_Movil.png` (1) | `App_Movil_1_Inicio.png` | Encabezado azul con logo, saludo, fecha, avatar y lema; botón verde con hora; jornada; accesos rápidos; mi asistencia; barra inferior | Ana Lucía ya registró su entrada, por eso el botón ofrece "Registrar salida"; para supervisores aparece "Por aprobar" |
+| App: Registrar asistencia | `App_Movil.png` (2) | `App_Movil_2_Registrar_asistencia.png` | Reloj, ubicación validada, mapa con geocerca y globo, evidencia, confirmar y nota de privacidad | Mapa de OpenStreetMap |
+| App: Registrar invitado | `App_Movil.png` (3) | `App_Movil_3_Registrar_invitado.png` | Campos, anfitrión, invitación QR temporal, botón y nota | Teléfono y correo opcionales (decisión 15); fecha y hora en dos campos (decisión 26); el QR real aparece solo al generar |
+| App: Solicitar vacaciones | `App_Movil.png` (4) | `App_Movil_4_Solicitar_vacaciones.png` | Saldo, calendario, resumen, botón y "Revisará" | Ruta calculada: "Gerente → RH" (inconsistencia 3) |
+| Solicitar vacaciones (detalle) | `Solicitar_vacaciones.png` (no recibida) | `Solicitar_vacaciones.png` | Misma vista con rango seleccionado, días hábiles y saldo después | Encabezado con flecha y título (decisión 27) |
+| Registro de invitados (detalle) | `Registro_de_invitados.png` (no recibida) | `Registro_de_invitados.png` | Invitación generada con QR real, vigencia y opciones para compartir | Encabezado con flecha y título (decisión 27) |

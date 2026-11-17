@@ -50,7 +50,7 @@ const hora12 = (h: string) => h.replace(/^0/, '')
         <rect :x="x(p.hora) - 14" :y="MT" width="28" :height="H - MT - MB" fill="transparent" @mouseenter="activo = p.i" />
       </g>
     </svg>
-    <div v-if="mostrado" class="globo" :style="{ left: `${(x(mostrado.hora) / W) * 100}%`, top: `${(y(mostrado.presentes) / H) * 100}%` }">
+    <div v-if="mostrado" class="globo" :class="{ abajo: y(mostrado.presentes) < H * 0.35 }" :style="{ left: `${(x(mostrado.hora) / W) * 100}%`, top: `${(y(mostrado.presentes) / H) * 100}%` }">
       <span>{{ hora12(mostrado.hora) }}</span><b>{{ mostrado.presentes }} colaboradores</b>
     </div>
     <p v-if="!validos.length" class="sin-datos">Aún no hay registros de asistencia hoy.</p>
@@ -71,5 +71,6 @@ svg { width: 100%; height: 196px; display: block; overflow: visible; }
 .guia { stroke: #0ca47c; stroke-width: 1.2; stroke-dasharray: 4 4; }
 .globo { position: absolute; transform: translate(12px, -110%); background: #fff; border: 1px solid var(--gris-200); box-shadow: var(--sombra); border-radius: 8px; padding: 7px 11px; font-size: 12.5px; color: var(--texto-2); white-space: nowrap; pointer-events: none; display: flex; flex-direction: column; line-height: 1.35; }
 .globo b { color: var(--titulo); font-weight: 650; }
+.globo.abajo { transform: translate(12px, 10px); }
 .sin-datos { position: absolute; inset: 0; display: grid; place-items: center; color: var(--texto-3); font-size: 14px; }
 </style>

@@ -7,144 +7,150 @@ Si la sesión se reinicia: leer este archivo y `docs/DECISIONES.md`, y retomar e
 ## Fases
 
 - [x] 1. Entorno, repositorio, estructura, base de datos, migraciones y datos de demostración
-- [ ] 2. Acceso, roles, marco de navegación, sistema visual y logo
-- [ ] 3. Organización y colaboradores
-- [ ] 4. Asistencia
-- [ ] 5. Vacaciones, permisos y motor de aprobaciones
-- [ ] 6. Visitantes
-- [ ] 7. Expedientes
-- [ ] 8. Dashboard, notificaciones y tareas programadas
-- [ ] 9. Reportes y configuración completa
-- [ ] 10. PWA, verificación visual, pruebas de punta a punta y guía de despliegue
+- [x] 2. Acceso, roles, marco de navegación, sistema visual y logo
+- [x] 3. Organización y colaboradores
+- [x] 4. Asistencia
+- [x] 5. Vacaciones, permisos y motor de aprobaciones
+- [x] 6. Visitantes
+- [x] 7. Expedientes
+- [x] 8. Dashboard, notificaciones y tareas programadas
+- [x] 9. Reportes y configuración completa
+- [x] 10. PWA, verificación visual, pruebas de punta a punta y guía de despliegue
 
 ## Acceso
-- [ ] Inicio de sesión
-- [ ] Cierre de sesión
-- [ ] Cambio de contraseña
-- [ ] Recuperación de contraseña
-- [ ] Roles y permisos aplicados en el servidor
-- [ ] Alcance por sucursal
+- [x] Inicio de sesión
+- [x] Cierre de sesión
+- [x] Cambio de contraseña
+- [x] Recuperación de contraseña
+- [x] Roles y permisos aplicados en el servidor
+- [x] Alcance por sucursal
 
 ## Marco
-- [ ] Menú según rol
-- [ ] Selector de sucursal
-- [ ] Buscador global
-- [ ] Centro de notificaciones con contador
-- [ ] Menú de usuario y perfil
+- [x] Menú según rol
+- [x] Selector de sucursal
+- [x] Buscador global
+- [x] Centro de notificaciones con contador
+- [x] Menú de usuario y perfil
 
 ## Inicio RH
-- [ ] Los 4 indicadores
-- [ ] Gráfica de asistencia en tiempo real
-- [ ] Solicitudes pendientes con Aprobar y Rechazar
-- [ ] Últimos registros
-- [ ] Cumpleaños
-- [ ] Documentos por vencer
-- [ ] Visitantes de hoy
+- [x] Los 4 indicadores
+- [x] Gráfica de asistencia en tiempo real
+- [x] Solicitudes pendientes con Aprobar y Rechazar
+- [x] Últimos registros
+- [x] Cumpleaños
+- [x] Documentos por vencer
+- [x] Visitantes de hoy
 
 ## Colaboradores
-- [ ] Listado con filtros
-- [ ] Alta
-- [ ] Edición
-- [ ] Baja
-- [ ] Ficha con sus 7 pestañas
-- [ ] Esquema de trabajo
-- [ ] Asignaciones temporales
-- [ ] Notas
-- [ ] Bitácora
-- [ ] Menú Más acciones
+- [x] Listado con filtros
+- [x] Alta
+- [x] Edición
+- [x] Baja
+- [x] Ficha con sus 7 pestañas
+- [x] Esquema de trabajo
+- [x] Asignaciones temporales
+- [x] Notas
+- [x] Bitácora
+- [x] Menú Más acciones
 
 ## Asistencia
-- [ ] Registro de entrada y salida desde la app con geocerca
-- [ ] Mapa
-- [ ] Foto opcional
-- [ ] Registro por terminal (quiosco web y endpoint con llave por dispositivo)
-- [ ] Cálculo de estado
-- [ ] Incidencias con su flujo
-- [ ] Vista de RH
-- [ ] Vista de supervisor
-- [ ] Vista del colaborador
+- [x] Registro de entrada y salida desde la app con geocerca
+- [x] Mapa
+- [x] Foto opcional
+- [x] Registro por terminal (quiosco web y endpoint con llave por dispositivo)
+- [x] Cálculo de estado
+- [x] Incidencias con su flujo
+- [x] Vista de RH
+- [x] Vista de supervisor
+- [x] Vista del colaborador
 
 ## Vacaciones y permisos
-- [ ] Saldos
-- [ ] Políticas
-- [ ] Solicitud en web
-- [ ] Solicitud en móvil
-- [ ] Simulación de días hábiles y ruta
-- [ ] Calendario de equipo
-- [ ] Cobertura y alertas
-- [ ] Vencimientos
-- [ ] Permisos
-- [ ] Incapacidades
-- [ ] Las 4 pestañas del portal RH
+- [x] Saldos
+- [x] Políticas
+- [x] Solicitud en web
+- [x] Solicitud en móvil
+- [x] Simulación de días hábiles y ruta
+- [x] Calendario de equipo
+- [x] Cobertura y alertas
+- [x] Vencimientos
+- [x] Permisos
+- [x] Incapacidades
+- [x] Las 4 pestañas del portal RH
 
 ## Aprobaciones
-- [ ] Motor único con reglas por tipo de solicitud
-- [ ] Pasos
-- [ ] Delegaciones
-- [ ] Bandeja de aprobaciones (web y móvil)
-- [ ] Bitácora de cada decisión
+- [x] Motor único con reglas por tipo de solicitud
+- [x] Pasos
+- [x] Delegaciones
+- [x] Bandeja de aprobaciones (web y móvil)
+- [x] Bitácora de cada decisión
 
 ## Visitantes
-- [ ] Registro de invitado
-- [ ] QR firmado con vigencia
-- [ ] Página pública del QR
-- [ ] Control de acceso con lectura por cámara
-- [ ] Entrada y salida
-- [ ] Listado y detalle para RH
+- [x] Registro de invitado
+- [x] QR firmado con vigencia
+- [x] Página pública del QR
+- [x] Control de acceso con lectura por cámara
+- [x] Entrada y salida
+- [x] Listado y detalle para RH
 
 ## Expedientes
-- [ ] Tipos de documento
-- [ ] Documentos requeridos por puesto
-- [ ] Carga y descarga
-- [ ] Vigencias
-- [ ] Alertas
-- [ ] Avance por colaborador
-- [ ] Mi expediente
+- [x] Tipos de documento
+- [x] Documentos requeridos por puesto
+- [x] Carga y descarga
+- [x] Vigencias
+- [x] Alertas
+- [x] Avance por colaborador
+- [x] Mi expediente
 
 ## Organización
-- [ ] Organigrama navegable y editable
-- [ ] Colaboradores sin supervisor
-- [ ] Sucursales
-- [ ] Áreas
-- [ ] Equipos
-- [ ] Puestos
-- [ ] Turnos
+- [x] Organigrama navegable y editable
+- [x] Colaboradores sin supervisor
+- [x] Sucursales
+- [x] Áreas
+- [x] Equipos
+- [x] Puestos
+- [x] Turnos
 
 ## Reportes
-- [ ] Asistencia por periodo
-- [ ] Retardos y faltas
-- [ ] Vacaciones y saldos
-- [ ] Visitantes
-- [ ] Documentos por vencer
-- [ ] Filtros
-- [ ] Exportación a CSV
-- [ ] Exportación a Excel
+- [x] Asistencia por periodo
+- [x] Retardos y faltas
+- [x] Vacaciones y saldos
+- [x] Visitantes
+- [x] Documentos por vencer
+- [x] Filtros
+- [x] Exportación a CSV
+- [x] Exportación a Excel
 
 ## Configuración
-- [ ] Catálogos y parámetros de la sección 13
-- [ ] Reglas de aprobación
-- [ ] Delegaciones
-- [ ] Días festivos
-- [ ] Mensajes de marca
-- [ ] Llaves de API
+- [x] Catálogos y parámetros de la sección 13
+- [x] Reglas de aprobación
+- [x] Delegaciones
+- [x] Días festivos
+- [x] Mensajes de marca
+- [x] Llaves de API
 
 ## Tareas programadas
-- [ ] Vencimiento de documentos
-- [ ] Vencimiento de días
-- [ ] Cumpleaños
-- [ ] Cierre diario de asistencia con faltas
-- [ ] Expiración de QR
-- [ ] Estado de asignaciones
+- [x] Vencimiento de documentos
+- [x] Vencimiento de días
+- [x] Cumpleaños
+- [x] Cierre diario de asistencia con faltas
+- [x] Expiración de QR
+- [x] Estado de asignaciones
 
 ## PWA
-- [ ] Manifiesto
-- [ ] Service worker
-- [ ] Instalación en teléfono y escritorio
-- [ ] Íconos generados a partir del logo
+- [x] Manifiesto
+- [x] Service worker
+- [x] Instalación en teléfono y escritorio
+- [x] Íconos generados a partir del logo
 
 ## Cierre
-- [ ] Pruebas automáticas de reglas de negocio
-- [ ] Pruebas de punta a punta (5 recorridos)
-- [ ] Capturas de las 11 pantallas en `docs/capturas/`
-- [ ] Documentación OpenAPI de todos los endpoints
-- [ ] README, DECISIONES y DESPLIEGUE completos
+- [x] Pruebas automáticas de reglas de negocio
+- [x] Pruebas de punta a punta (5 recorridos)
+- [x] Capturas de las 11 pantallas en `docs/capturas/`
+- [x] Documentación OpenAPI de todos los endpoints
+- [x] README, DECISIONES y DESPLIEGUE completos
+
+## Cómo se verificó
+
+- **Back**: 43 pruebas xUnit (`backend/WowTime.Tests`): reglas puras (días hábiles con el caso obligatorio del 15 al 19 de septiembre de 2026 = 3, traslapes, estado de asistencia, geocerca, vigencia y firma del QR, vigencia de documentos, antigüedad, cobertura, festivos) y recorridos de la API contra PostgreSQL (ruta Gerente → RH, flujo completo con saldo y calendario, delegación y separación de funciones, autoaprobación, saldo insuficiente, traslapes y liberación de saldo, colaborador sin supervisor, entrada y salida con geocerca, invitado con QR, documento con alerta, permisos y alcance por sucursal, llaves de API, recuperación y cambio de contraseña, tareas programadas idempotentes).
+- **Punta a punta**: 5 recorridos en navegador (`frontend/e2e/recorridos.spec.ts`) y una prueba de humo que recorre todas las pantallas con cada rol sin errores de JavaScript ni respuestas 4xx/5xx (`frontend/e2e/humo.spec.ts`).
+- **Visual**: capturas de las 11 pantallas diseñadas en `docs/capturas/`, comparadas con `docs/mockups/` (ver `docs/capturas/COMPARACION.md`).

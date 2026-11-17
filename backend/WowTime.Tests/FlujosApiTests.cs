@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -285,5 +286,42 @@ public class FlujosApiTests(ApiFixture fx)
         Assert.Equal(403, (int)(await cli.GetAsync("/api/v1/usuarios")).StatusCode);
         await admin.Ok(admin.Post($"/llaves-api/{k["id"]!.GetValue<int>()}/revocar", new { }));
         Assert.Equal(401, (int)(await cli.GetAsync("/api/v1/asistencia/incidencias?tamano=1")).StatusCode);
+    }
+
+    [Fact(DisplayName = "Recuperación y cambio de contraseña")]
+    public async Task RecuperacionYCambioDeContrasena()
+    {
+        var anon = fx.Fabrica.CreateClient();
+        var r = await anon.PostAsJsonAsync("/api/v1/auth/recuperar", new { email = "miguel.sanchez@wowtime.mx" });
+        Assert.True(r.IsSuccessStatusCode);
+        // El correo queda en la bandeja de salida con el enlace (sin SMTP configurado)
+        var cuerpo = fx.Servicio(sp => sp.GetRequiredService<AppDb>().Correos.OrderByDescending(c => c.Id).First(c => c.Para == "miguel.sanchez@wowtime.mx").Cuerpo);
+        var token = System.Text.RegularExpressions.Regex.Match(cuerpo, "token=([A-Za-z0-9_-]+)").Groups[1].Value;
+        Assert.False(string.IsNullOrEmpty(token));
+        var (corta, _) = await new Cliente(anon).Post("/auth/restablecer", new { token, passwordNueva = "corta" });
+        Assert.Equal(422, corta);
+        await new Cliente(anon).Ok(new Cliente(anon).Post("/auth/restablecer", new { token, passwordNueva = "NuevaClave2026" }));
+        var (reuso, _) = await new Cliente(anon).Post("/auth/restablecer", new { token, passwordNueva = "OtraClave2026" });
+        Assert.Equal(422, reuso);
+        var login = await anon.PostAsJsonAsync("/api/v1/auth/login", new { email = "miguel.sanchez@wowtime.mx", password = "NuevaClave2026" });
+        Assert.True(login.IsSuccessStatusCode);
+        var tok = JsonNode.Parse(await login.Content.ReadAsStringAsync())!["tokenAcceso"]!.GetValue<string>();
+        var c = fx.Fabrica.CreateClient();
+        c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tok);
+        await new Cliente(c).Ok(new Cliente(c).Post("/auth/cambiar-password", new { passwordActual = "NuevaClave2026", passwordNueva = Semilla.PasswordDemo }));
+        Assert.True((await anon.PostAsJsonAsync("/api/v1/auth/login", new { email = "miguel.sanchez@wowtime.mx", password = Semilla.PasswordDemo })).IsSuccessStatusCode);
+    }
+
+    [Fact(DisplayName = "Tareas programadas: se ejecutan y son idempotentes")]
+    public async Task TareasProgramadas()
+    {
+        var admin = await fx.Como("admin@wowtime.mx");
+        var r1 = await admin.Ok(admin.Post("/tareas/ejecutar"));
+        foreach (var t in new[] { "asignaciones", "qr", "saldos", "vencimiento_dias", "documentos", "cumpleanos", "cierre_asistencia" })
+            Assert.DoesNotContain("Error", r1[t]!.GetValue<string>());
+        var notifs = fx.Servicio(sp => sp.GetRequiredService<AppDb>().Notificaciones.Count());
+        await admin.Ok(admin.Post("/tareas/ejecutar"));
+        Assert.Equal(notifs, fx.Servicio(sp => sp.GetRequiredService<AppDb>().Notificaciones.Count()));
+        Assert.Equal(403, (await (await fx.Como("rh@wowtime.mx")).Post("/tareas/ejecutar")).status);
     }
 }

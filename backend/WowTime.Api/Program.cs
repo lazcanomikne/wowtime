@@ -16,7 +16,14 @@ var cfg = builder.Configuration;
 var cadena = cfg.GetConnectionString("Default") ?? throw new InvalidOperationException("Falta ConnectionStrings__Default en el archivo .env");
 builder.Services.AddDbContext<AppDb>(o => o.UseNpgsql(cadena, n => n.MigrationsHistoryTable("__migraciones")));
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddSingleton<IReloj, RelojSistema>();
+if (!string.IsNullOrWhiteSpace(cfg["Reloj:Simular"]))
+{
+    var simulado = RelojDesplazado.Desde(cfg["Reloj:Simular"]!, "America/Monterrey");
+    builder.Services.AddSingleton<IReloj>(simulado);
+    Enlaces.Ahora = () => simulado.Ahora;
+    Console.WriteLine($"ATENCIÓN: reloj simulado ({cfg["Reloj:Simular"]} hora de Monterrey). Solo para demostraciones.");
+}
+else builder.Services.AddSingleton<IReloj, RelojSistema>();
 builder.Services.AddSingleton<CanalEventos>();
 builder.Services.AddScoped<UsuarioActual>();
 builder.Services.AddScoped<IUsuarioActualAccessor>(sp => sp.GetRequiredService<UsuarioActual>());
@@ -101,6 +108,7 @@ builder.Services.AddSwaggerGen(o =>
     var xml = Path.Combine(AppContext.BaseDirectory, "WowTime.Api.xml");
     if (File.Exists(xml)) o.IncludeXmlComments(xml);
     o.CustomSchemaIds(t => t.FullName!.Replace("WowTime.Api.", "").Replace("+", "."));
+    o.OperationFilter<ResumenesOpenApi>();
     o.SupportNonNullableReferenceTypes();
     o.MapType<DateOnly>(() => new OpenApiSchema { Type = JsonSchemaType.String, Format = "date" });
     o.MapType<TimeOnly>(() => new OpenApiSchema { Type = JsonSchemaType.String, Format = "time" });

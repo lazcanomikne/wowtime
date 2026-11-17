@@ -50,3 +50,24 @@ Decisiones tomadas por cuenta propia durante la construcción. Las "Decisiones y
 - Para llegar a 160 en Monterrey se agregaron tres supervisores más bajo Carlos Méndez (Andrea Ruiz, Verónica Castro y Ricardo Solís), con su personal. Por eso Carlos tiene más de 1 reporte directo en el organigrama.
 - La asignación temporal de Ana Lucía es "Home office" por "Remodelación del área de supervisión" (corrige la inconsistencia 4) y no se traslapa con su solicitud de vacaciones.
 - El comando de semilla genera asistencia de los últimos 45 días y del día de hoy **hasta la hora en que se ejecuta**. Para ver el dashboard "vivo" conviene cargarla en horario laboral.
+
+## Interfaz
+
+1. **Un solo menú** armado con los permisos. RH y Administrador ven los 8 módulos del mockup; su propio autoservicio (Mi asistencia, Mis vacaciones, Mi expediente, Bandeja de aprobaciones, Mis invitados) está en el menú de usuario para no alterar el menú del diseño. Supervisores y gerentes ven, además de las 4 opciones del colaborador, **Aprobaciones**, **Mi equipo** y **Reportes** (decisión 9 y matriz de permisos); por eso el menú de Ana Lucía tiene más opciones que en `Solicitud_de_Vacaciones.png`.
+2. **Recepción** usa el portal de autoservicio con **Control de acceso** y **Visitantes**; en teléfono la segunda pestaña de la barra inferior es "Acceso" en lugar de "Asistencia".
+3. **Barra inferior** solo para quien no es de RH y está en un teléfono (< 768 px). RH en teléfono conserva el menú lateral como cajón.
+4. **Búsqueda de personas para no RH**: el listado de colaboradores respeta el alcance (un colaborador solo se ve a sí mismo), así que la cobertura, el delegado y el anfitrión se eligen con `GET /solicitudes/companeros` y `GET /aprobaciones/delegados` (compañeros activos de sus sucursales, sin datos sensibles).
+5. **Organigrama**: por omisión se despliegan la raíz y los nodos con hasta 3 reportes directos; el árbol se centra y el zoom se ajusta para que quepa. Los demás se abren con su etiqueta de reportes o con "Expandir todo". Hijos ordenados de menos a más reportes (Mariana Torres a la izquierda, como en el mockup).
+6. **Filtro de mes de Vacaciones**: el mes del encabezado y las flechas del calendario de equipo están sincronizados (una sola fuente de verdad del periodo).
+7. **Campos de fecha** con formato `dd/mm/aaaa` propio (no el del navegador) y hora en formato de 24 h en intervalos de 15 minutos.
+8. **Ruta en móvil**: "Revisará: Gerente → RH" se arma con las etiquetas de los pasos que calcula el servidor; en web se muestran nombre y puesto de cada aprobador.
+9. **Control de acceso**: lee el QR con la cámara (jsQR) y acepta el contenido o el código escrito. La salida se registra con el mismo QR o con el botón "Registrar salida" de la lista "Dentro ahora".
+10. **Quiosco web**: la llave del dispositivo se guarda en el navegador de la tableta (`localStorage`) y se valida contra la API; si se revoca, regresa a la pantalla de configuración.
+11. **Sin conexión**: el service worker guarda las lecturas de la API (red primero, caché como respaldo) y las teselas del mapa, así la app abre con los últimos datos. Registrar asistencia exige conexión y lo indica en pantalla.
+
+## Pruebas y verificación visual
+
+1. **Pruebas del back**: xUnit con `WebApplicationFactory` contra `wowtime_test`, que se borra y se recarga con la semilla en cada corrida.
+2. **Punta a punta**: Playwright levanta su propia API (puerto 5081, base `wowtime_test`) y su propio front (5174), así no dependen ni alteran el entorno de desarrollo.
+3. **Reloj simulado (solo demostración)**: la variable `Reloj__Simular=AAAA-MM-DDTHH:mm:ss` desplaza la hora del servidor. Se usa únicamente para las capturas (12:15 de hoy), para que el dashboard se vea "vivo" aunque se generen de madrugada. El token JWT siempre usa el reloj real. Nunca se activa en producción.
+4. **Datos de demostración**: María Fernández nunca tiene registro del día (para la prueba de entrada y salida); nadie cumple aniversario laboral el día de la carga y ningún saldo de demostración queda negativo.

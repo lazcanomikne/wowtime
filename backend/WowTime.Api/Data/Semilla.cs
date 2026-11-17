@@ -363,7 +363,7 @@ public class Semilla(AppDb db, IReloj reloj, Almacen almacen, ServicioSaldos sal
             var s = saldosTodos.Where(x => x.ColaboradorId == c.Id).OrderByDescending(x => x.Periodo).First();
             s.DiasUsados = usados;
         }
-        Usados(ana, 7); Usados(sofia, 8); Usados(named[2], 18); Usados(named[7], 11); Usados(named[9], 9); Usados(named[10], 5);
+        Usados(ana, 4); Usados(sofia, 8); Usados(named[2], 18); Usados(named[7], 11); Usados(named[9], 9); Usados(named[10], 5);
         await db.SaveChangesAsync();
 
         // Asignación temporal vigente de Ana Lucía
@@ -525,6 +525,8 @@ public class Semilla(AppDb db, IReloj reloj, Almacen almacen, ServicioSaldos sal
                 var saldo = await db.Saldos.Where(x => x.ColaboradorId == c.Id).OrderByDescending(x => x.Periodo).FirstOrDefaultAsync();
                 if (saldo is not null)
                 {
+                    // Los datos de demostración nunca dejan saldos negativos
+                    if (saldo.Disponibles < dias) saldo.DiasUsados = Math.Max(0, saldo.DiasUsados - (dias - saldo.Disponibles));
                     if (estado == EstadoSolicitud.Pendiente) saldo.DiasComprometidos += dias; else saldo.DiasUsados += dias;
                     db.MovimientosSaldo.Add(new MovimientoSaldo { SaldoVacacionesId = saldo.Id, ColaboradorId = c.Id, Tipo = TipoMovimientoSaldo.Compromiso, Dias = dias, SolicitudId = s.Id, Fecha = s.CreadoEn, Motivo = $"Solicitud {s.Folio}" });
                     if (estado == EstadoSolicitud.Aprobada)

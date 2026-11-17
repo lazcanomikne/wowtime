@@ -126,9 +126,10 @@ public class ServicioTokens(IOptions<OpcionesJwt> opt, AppDb db, IReloj reloj)
         claims.AddRange(u.Roles.Select(r => new Claim(ClaimTypes.Role, r)));
         claims.AddRange(permisos.Select(p => new Claim("perm", p)));
         claims.AddRange(u.Sucursales.Select(s => new Claim("suc", s.ToString())));
-        var expira = reloj.Ahora.AddMinutes(opt.Value.MinutosAcceso);
+        // El JWT se valida contra el reloj real del sistema
+        var expira = DateTime.UtcNow.AddMinutes(opt.Value.MinutosAcceso);
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(opt.Value.Clave));
-        var token = new JwtSecurityToken(opt.Value.Emisor, opt.Value.Emisor, claims, reloj.Ahora.AddSeconds(-5), expira,
+        var token = new JwtSecurityToken(opt.Value.Emisor, opt.Value.Emisor, claims, DateTime.UtcNow.AddSeconds(-5), expira,
             new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
         var acceso = new JwtSecurityTokenHandler().WriteToken(token);
 
@@ -169,6 +170,17 @@ public class LlaveApiHandler(IOptionsMonitor<AuthenticationSchemeOptions> o, ILo
 
 public interface IReloj { DateTime Ahora { get; } }
 public class RelojSistema : IReloj { public DateTime Ahora => DateTime.UtcNow; }
+
+/// <summary>Solo para demostraciones y capturas: el reloj avanza normalmente pero desde una hora local simulada (Reloj__Simular).</summary>
+public class RelojDesplazado(TimeSpan desfase) : IReloj
+{
+    public DateTime Ahora => DateTime.UtcNow + desfase;
+    public static RelojDesplazado Desde(string horaLocal, string zona)
+    {
+        var local = DateTime.Parse(horaLocal, System.Globalization.CultureInfo.InvariantCulture);
+        return new RelojDesplazado(Zona.AUtc(local, zona) - DateTime.UtcNow);
+    }
+}
 
 public static class Zona
 {

@@ -20,14 +20,18 @@ if (-not (Test-Path (Join-Path $api '.env'))) {
 if (-not (Test-Path (Join-Path $front '.env.local'))) { Copy-Item (Join-Path $front '.env.example') (Join-Path $front '.env.local') }
 if (-not (Test-Path (Join-Path $front 'node_modules'))) { Push-Location $front; npm ci; Pop-Location }
 
+# La API local corre desde su propia carpeta para no bloquear la compilación de las pruebas
+$salida = Join-Path $api 'bin\local'
 Push-Location $api
-dotnet build -nologo -v q
+dotnet build -nologo -v q -o $salida
 if ($LASTEXITCODE -ne 0) { Pop-Location; exit 1 }
-if ($Semilla) { dotnet run --no-build -- semilla --reiniciar } else { dotnet run --no-build -- migrar }
+$dll = Join-Path $salida 'WowTime.Api.dll'
+if ($Semilla) { dotnet $dll semilla --reiniciar } else { dotnet $dll migrar }
 Pop-Location
 
 Write-Host "Iniciando API en http://localhost:5080 (documentación: http://localhost:5080/api/docs)" -ForegroundColor Green
-$procApi = Start-Process dotnet -ArgumentList 'run','--no-build','--launch-profile','http' -WorkingDirectory $api -PassThru -NoNewWindow
+$env:ASPNETCORE_ENVIRONMENT = 'Development'
+$procApi = Start-Process dotnet -ArgumentList "`"$dll`"",'--urls','http://localhost:5080' -WorkingDirectory $api -PassThru -NoNewWindow
 Write-Host "Iniciando front en http://localhost:5173" -ForegroundColor Green
 try {
   Push-Location $front

@@ -53,7 +53,17 @@ async function cargarOrg() {
   if (route.query.sinSupervisor) modal.value = 'sinsup'
 }
 const lienzo = ref<HTMLElement>()
-function centrar() { nextTick(() => { const l = lienzo.value; if (l) l.scrollLeft = Math.max(0, (l.scrollWidth - l.clientWidth) / 2) }) }
+const arbolEl = ref<HTMLElement>()
+let zoomAjustado = false
+function centrar() {
+  nextTick(() => {
+    const l = lienzo.value, a = arbolEl.value
+    if (!l) return
+    // La primera vez ajusta el zoom para que el árbol quepa en la tarjeta
+    if (!zoomAjustado && a && a.scrollWidth > l.clientWidth) { zoom.value = Math.max(60, Math.floor((l.clientWidth / a.scrollWidth) * 100 / 5) * 5); zoomAjustado = true }
+    nextTick(() => { l.scrollLeft = Math.max(0, (l.scrollWidth - l.clientWidth) / 2) })
+  })
+}
 async function cargarReglas() { reglas.value = await api.get('/aprobaciones/reglas') }
 async function cargarDelegaciones() { delegaciones.value = (await api.get('/aprobaciones/delegaciones', { sucursalId: s.sucursalId ?? undefined, tamano: 50 })).items }
 async function todo() { await Promise.allSettled([cargarOrg(), cargarReglas(), cargarDelegaciones()]) }
@@ -152,13 +162,13 @@ const tiposTexto = (t: string[]) => t.map(x => TIPOS.find(y => y.v === x)?.t.toL
         <div class="tarjeta-cabecera arriba">
           <div><h2 class="titulo-tarjeta">Organigrama de la empresa</h2><p class="subtitulo-tarjeta">Visualiza la estructura de tu organización y las líneas de reporte.</p></div>
           <div class="fila controles">
-            <label class="zoom"><Icono n="buscar" :t="16" /><select v-model.number="zoom" aria-label="Zoom"><option v-for="z in [50, 75, 100, 125, 150]" :key="z" :value="z">{{ z }}%</option></select></label>
+            <label class="zoom"><Icono n="buscar" :t="16" /><select v-model.number="zoom" aria-label="Zoom"><option v-for="z in [50, 60, 65, 70, 75, 80, 85, 90, 95, 100, 125, 150]" :key="z" :value="z">{{ z }}%</option></select></label>
             <button class="btn btn-contorno btn-ch" @click="expandirTodo"><Icono :n="todoAbierto ? 'contraer' : 'expandir'" :t="16" />{{ todoAbierto ? 'Contraer' : 'Expandir todo' }}</button>
           </div>
         </div>
         <p v-if="editar" class="caja-info editando"><Icono n="info" :t="18" />Arrastra un colaborador sobre su nuevo jefe para cambiar la línea de reporte. Usa + para agregar a alguien a su cargo.</p>
         <div ref="lienzo" class="lienzo">
-          <ul v-if="org" class="arbol" :style="{ transform: `scale(${zoom / 100})` }">
+          <ul v-if="org" ref="arbolEl" class="arbol" :style="{ transform: `scale(${zoom / 100})` }">
             <OrgNodo v-for="r in org.raices" :key="r.id" :n="r" :nivel="0" :abiertos="abiertos" :editar="editar" :arrastrando="arrastrando"
                      @alternar="alternar" @abrir="id => router.push(`/colaboradores/${id}`)" @soltar="soltar" @arrastrar="id => (arrastrando = id)"
                      @agregar="id => router.push(`/colaboradores/nuevo?supervisorId=${id}`)" />
@@ -200,8 +210,8 @@ const tiposTexto = (t: string[]) => t.map(x => TIPOS.find(y => y.v === x)?.t.toL
               <thead><tr><th>De</th><th>Hacia</th><th>Periodo</th><th>Tipo(s)</th><th /></tr></thead>
               <tbody>
                 <tr v-for="d in delegaciones" :key="d.id">
-                  <td><div class="fila p"><Persona :p="d.de" :t="36" /><Icono n="flecha" :t="16" class="muted" /></div></td>
-                  <td><Persona :p="d.hacia" :t="36" /></td>
+                  <td><div class="fila p"><Persona :p="d.de" :t="30" /><Icono n="flecha" :t="16" class="muted" /></div></td>
+                  <td><Persona :p="d.hacia" :t="30" /></td>
                   <td class="nw">{{ rango(d.fechaInicio, d.fechaFin, true) }}</td>
                   <td>{{ tiposTexto(d.tipos) }}</td>
                   <td>
@@ -340,16 +350,20 @@ const tiposTexto = (t: string[]) => t.map(x => TIPOS.find(y => y.v === x)?.t.toL
 .arbol > :deep(li > .nodo::before) { display: none; }
 .col-der { display: flex; flex-direction: column; gap: 20px; }
 .reglas { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-.regla { display: grid; grid-template-columns: 30px 96px 1fr auto auto; align-items: center; gap: 10px; border: 1px solid var(--gris-200); border-radius: 10px; padding: 12px 12px 12px 14px; }
+.regla { display: grid; grid-template-columns: 28px 88px 1fr auto auto; align-items: center; gap: 8px; border: 1px solid var(--gris-200); border-radius: 10px; padding: 12px 12px 12px 14px; }
 .regla.inactiva { background: var(--gris-50); }
-.regla .nombre { font-size: 14.5px; color: var(--titulo); line-height: 1.2; }
-.pasos { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
-.paso { background: var(--gris-100); border-radius: 6px; padding: 8px 10px; font-size: 13.5px; color: var(--titulo); white-space: nowrap; }
+.regla .nombre { font-size: 14px; color: var(--titulo); line-height: 1.2; }
+.pasos { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
+@media (max-width: 1400px) { .pasos { flex-wrap: wrap; } }
+.paso { background: var(--gris-100); border-radius: 6px; padding: 7px 9px; font-size: 13px; color: var(--titulo); white-space: nowrap; }
 .fl { color: var(--texto-2); }
 .regla .etiqueta { height: 30px; padding: 0 12px; font-size: 13.5px; }
-@media (max-width: 1500px) { .pasos { flex-wrap: wrap; } }
+
 .azul { color: var(--azul); border-color: var(--gris-300); }
-.dele td { padding: 10px 8px; }
+.dele { font-size: 13px; }
+.dele td, .dele th { padding: 8px 6px; }
+.dele :deep(.persona .nombre) { font-size: 13px; }
+.dele :deep(.persona .sub) { font-size: 11.5px; }
 .dele .p { gap: 6px; }
 .nw { white-space: nowrap; }
 .alerta-est { display: flex; align-items: center; gap: 18px; background: #fdeef0; border: 1px solid #f7c9cf; border-radius: 12px; padding: 20px 22px; }
